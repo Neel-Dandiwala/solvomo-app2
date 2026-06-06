@@ -57,12 +57,12 @@ function cell(row: Record<string, unknown>, key: string) {
         <tbody>
           <tr v-if="props.rows.length === 0">
             <td :colspan="Math.max(props.columns.length, 1)" class="data-table-empty px-6 py-14 text-center text-[15px] text-black/52">
-              {{ props.emptyLabel ?? "No rows yet." }}
+              {{ props.emptyLabel || "No rows yet." }}
             </td>
           </tr>
           <tr
             v-for="(row, idx) in props.rows"
-            :key="String(row[props.rowKey] ?? idx)"
+            :key="String(row[props.rowKey] || idx)"
             class="data-table-row cursor-pointer transition-colors hover:bg-black/[0.02]"
             :class="
               props.highlightRowKey != null && String(row[props.rowKey]) === props.highlightRowKey

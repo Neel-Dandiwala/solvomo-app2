@@ -1,18 +1,16 @@
 <script setup lang="ts">
+import { onboardingStepIndexForPath } from "~/utils/onboardingFlow";
+
 const route = useRoute();
 const auth = useAuth();
 
 const activeStepIndex = computed(() => {
-  const p = route.path;
-  if (p.includes("/onboarding/survey")) return 0;
-  if (p.includes("/onboarding/brand-setup")) return 1;
-  if (p.includes("/onboarding/connections")) return 2;
-  return 0;
+  return onboardingStepIndexForPath(route.path);
 });
 
 async function signOut() {
   auth.logout();
-  await navigateTo("/login");
+  await navigateTo("/");
 }
 </script>
 

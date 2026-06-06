@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import OverviewScreen from "~/components/app/OverviewScreen.vue";
-
 definePageMeta({ layout: "app" });
-
-useHead({ title: "Overview — Solvomo" });
+await navigateTo("/app", { replace: true });
 </script>
 
 <template>
-  <OverviewScreen />
+  <p class="p-6 text-[13px] text-black/50">Redirecting…</p>
 </template>

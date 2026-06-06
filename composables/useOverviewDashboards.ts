@@ -1,4 +1,5 @@
-import type { OverviewDashboardConfig, OverviewWidgetConfig } from "~/types/mock";
+import { watch } from "vue";
+import type { OverviewDashboardConfig, OverviewData, OverviewWidgetConfig } from "~/types/mock";
 
 type PlacementTarget = "top" | "bottom" | "after";
 type DashboardTemplate = "executive" | "operator" | "blank";
@@ -23,21 +24,39 @@ function cloneDashboardState(source: OverviewDashboardState): OverviewDashboardS
 
 export function useOverviewDashboards() {
   const auth = useAuth();
+  const workspace = useWorkspaceContext();
   const { overview } = useAppData();
 
-  const stateByUser = useState<Record<string, OverviewDashboardState>>("sv-overview-dashboard-state", () => ({}));
-  const restoredKeys = useState<Record<string, boolean>>("sv-overview-dashboard-restored", () => ({}));
+  const stateByScope = useState<Record<string, OverviewDashboardState>>("sv-overview-dashboard-state-v2", () => ({}));
+  const restoredKeys = useState<Record<string, boolean>>("sv-overview-dashboard-restored-v2", () => ({}));
 
-  const activeUserId = computed(() => auth.activeUserId.value ?? null);
+  const activeUserId = computed(() => auth.activeUserId.value || null);
 
-  function seedFromMock(userId: string) {
+  /** Per user + brand profile so Playground layout does not leak into production profiles. */
+  const overviewScopeKey = computed(() => {
+    const u = activeUserId.value;
+    const b = workspace.currentBrandProfileId.value;
+    if (!u || !b) return null;
+    return `${u}:${b}`;
+  });
+
+  function snapshotHasDashboardLayout(snapshot: OverviewData) {
+    return snapshot.widgets.length > 0 || snapshot.dashboards.length > 0;
+  }
+
+  function stateHasNoDashboardLayout(state: OverviewDashboardState | undefined) {
+    if (!state) return true;
+    return state.widgets.length === 0 && state.dashboards.length === 0;
+  }
+
+  function seedFromMock(scopeKey: string) {
     const snapshot = overview.value;
     if (!snapshot) return;
 
-    stateByUser.value[userId] = {
+    stateByScope.value[scopeKey] = {
       selectedDashboardId:
-        snapshot.dashboards.find((dashboard) => dashboard.isDefault)?.id ??
-        snapshot.dashboards[0]?.id ??
+        snapshot.dashboards.find((dashboard) => dashboard.isDefault)?.id ||
+        snapshot.dashboards[0]?.id ||
         "",
       dashboards: snapshot.dashboards.map((dashboard) => ({ ...dashboard, widgetIds: [...dashboard.widgetIds] })),
       widgets: snapshot.widgets.map((widget) => ({ ...widget })),
@@ -45,51 +64,65 @@ export function useOverviewDashboards() {
     };
   }
 
-  function restoreForUser(userId: string) {
-    if (!import.meta.client || restoredKeys.value[userId]) return;
-    restoredKeys.value[userId] = true;
+  function restoreForScope(scopeKey: string) {
+    if (!import.meta.client || restoredKeys.value[scopeKey]) return;
+    restoredKeys.value[scopeKey] = true;
 
-    const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}:${userId}`);
+    const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}:${scopeKey}`);
     if (raw) {
       try {
         const parsed = JSON.parse(raw) as OverviewDashboardState;
-        stateByUser.value[userId] = cloneDashboardState(parsed);
+        stateByScope.value[scopeKey] = cloneDashboardState(parsed);
         return;
       } catch {
-        localStorage.removeItem(`${STORAGE_KEY_PREFIX}:${userId}`);
+        localStorage.removeItem(`${STORAGE_KEY_PREFIX}:${scopeKey}`);
       }
     }
 
-    seedFromMock(userId);
+    seedFromMock(scopeKey);
   }
 
   watchEffect(() => {
-    const userId = activeUserId.value;
-    if (!userId || !overview.value) return;
-    restoreForUser(userId);
-    if (!stateByUser.value[userId]) seedFromMock(userId);
+    const scopeKey = overviewScopeKey.value;
+    if (!scopeKey || !overview.value) return;
+    restoreForScope(scopeKey);
+    if (!stateByScope.value[scopeKey]) seedFromMock(scopeKey);
   });
 
+  /**
+   * Playground (and other async) bundles load after brand switch; first pass seeds empty layout.
+   * Re-seed when the API snapshot gains dashboards/widgets while local state is still empty.
+   */
+  watch(
+    () => [overviewScopeKey.value, overview.value] as const,
+    ([scopeKey, snapshot]) => {
+      if (!scopeKey || !snapshot) return;
+      const existing = stateByScope.value[scopeKey];
+      if (!snapshotHasDashboardLayout(snapshot) || !stateHasNoDashboardLayout(existing)) return;
+      seedFromMock(scopeKey);
+    },
+  );
+
   const currentState = computed(() => {
-    const userId = activeUserId.value;
-    return userId ? stateByUser.value[userId] ?? null : null;
+    const scopeKey = overviewScopeKey.value;
+    return scopeKey ? stateByScope.value[scopeKey] || null : null;
   });
 
   watch(
     currentState,
     (value) => {
-      const userId = activeUserId.value;
-      if (!import.meta.client || !userId || !value) return;
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}:${userId}`, JSON.stringify(value));
+      const scopeKey = overviewScopeKey.value;
+      if (!import.meta.client || !scopeKey || !value) return;
+      localStorage.setItem(`${STORAGE_KEY_PREFIX}:${scopeKey}`, JSON.stringify(value));
     },
     { deep: true },
   );
 
-  const dashboards = computed(() => currentState.value?.dashboards ?? []);
-  const widgets = computed(() => currentState.value?.widgets ?? []);
+  const dashboards = computed(() => currentState.value?.dashboards || []);
+  const widgets = computed(() => currentState.value?.widgets || []);
 
   const selectedDashboardId = computed({
-    get: () => currentState.value?.selectedDashboardId ?? "",
+    get: () => currentState.value?.selectedDashboardId || "",
     set: (value: string) => {
       if (!currentState.value) return;
       currentState.value.selectedDashboardId = value;
@@ -97,7 +130,7 @@ export function useOverviewDashboards() {
   });
 
   const currentDashboard = computed(
-    () => dashboards.value.find((dashboard) => dashboard.id === selectedDashboardId.value) ?? dashboards.value[0] ?? null,
+    () => dashboards.value.find((dashboard) => dashboard.id === selectedDashboardId.value) || dashboards.value[0] || null,
   );
 
   const widgetsById = computed(() =>
@@ -107,7 +140,7 @@ export function useOverviewDashboards() {
   const currentWidgets = computed(() =>
     currentDashboard.value?.widgetIds
       .map((widgetId) => widgetsById.value[widgetId])
-      .filter((widget): widget is OverviewWidgetConfig => Boolean(widget)) ?? [],
+      .filter((widget): widget is OverviewWidgetConfig => Boolean(widget)) || [],
   );
 
   function insertWidgetId(widgetIds: string[], widgetId: string, placement: PlacementTarget, afterWidgetId?: string) {
@@ -154,9 +187,9 @@ export function useOverviewDashboards() {
 
     const templateDefaults =
       options.template === "executive"
-        ? overview.value?.dashboards.find((dashboard) => dashboard.isDefault)?.widgetIds ?? []
+        ? overview.value?.dashboards.find((dashboard) => dashboard.isDefault)?.widgetIds || []
         : options.template === "operator"
-          ? overview.value?.dashboards.find((dashboard) => !dashboard.isDefault)?.widgetIds ?? []
+          ? overview.value?.dashboards.find((dashboard) => !dashboard.isDefault)?.widgetIds || []
           : [];
 
     const widgetIds = options.widgetIds.length ? options.widgetIds : templateDefaults;

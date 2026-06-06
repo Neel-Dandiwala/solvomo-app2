@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { EnvironmentKind } from "~/types/app-shell";
+import type { ProfileBadgeKind } from "~/types/app-shell";
 
 const props = defineProps<{
-  kind: EnvironmentKind;
+  kind: ProfileBadgeKind;
 }>();
 
 const label = computed(() => (props.kind === "playground" ? "PG" : "Prod"));

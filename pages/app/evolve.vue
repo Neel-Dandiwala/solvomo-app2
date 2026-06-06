@@ -1,229 +1,272 @@
 <script setup lang="ts">
-import { ArrowRight, CheckCircle2, Download, Palette, Sparkles } from "lucide-vue-next";
-import CreativeVariantThumb from "~/components/app/creatives/CreativeVariantThumb.vue";
-import adGrid1 from "~/assets/images/creatives/ad_grid_1.png";
-import adGrid2 from "~/assets/images/creatives/ad_grid_2.png";
-import adGrid3 from "~/assets/images/creatives/ad_grid_3.png";
+import { ArrowRight, Copy, FlaskConical, Rocket } from "lucide-vue-next";
+import type { EvolveStatus } from "~/composables/useSimulationPushValidation";
+import { brandScopeQuery } from "~/utils/apiScope";
 
 definePageMeta({ layout: "app" });
 
 useHead({ title: "Evolve — Solvomo" });
 
-const grids = [adGrid1, adGrid2, adGrid3] as const;
+const api = useApiClient();
+const workspace = useWorkspaceContext();
+const playground = usePlayground();
+const { validatePush } = useSimulationPushValidation();
+const route = useRoute();
 
-function gridSrc(sheet: 1 | 2 | 3) {
-  return grids[sheet - 1] ?? adGrid1;
-}
+type SimulationRow = {
+  id: string;
+  name: string;
+  created_at?: string;
+  updated_at?: string;
+  variants?: Array<{ platform?: string; label?: string }>;
+  audience?: Record<string, unknown>;
+  budget?: Record<string, unknown> | number;
+  evolve_status?: string;
+  run_summary?: { overall_score?: number; recommendation?: string };
+};
 
-/** Performance-ready, verified visuals for experimentation and publishing. */
-const verifiedAssets = [
-  {
-    id: "ev-1",
-    name: "Founder narrative — 15s proof",
-    status: "verified" as const,
-    sheet: 1 as const,
-    variant: 0,
-    roas: "4.8x",
-    lastCheck: "Today",
-    channel: "Meta Ads",
-  },
-  {
-    id: "ev-2",
-    name: "Product demo — workflow cut",
-    status: "verified" as const,
-    sheet: 2 as const,
-    variant: 3,
-    roas: "5.1x",
-    lastCheck: "Yesterday",
-    channel: "Google Ads",
-  },
-  {
-    id: "ev-3",
-    name: "Customer story — testimonial",
-    status: "approved" as const,
-    sheet: 1 as const,
-    variant: 4,
-    roas: "4.4x",
-    lastCheck: "2d ago",
-    channel: "YouTube",
-  },
-  {
-    id: "ev-4",
-    name: "Retargeting — social proof grid",
-    status: "verified" as const,
-    sheet: 3 as const,
-    variant: 1,
-    roas: "5.9x",
-    lastCheck: "Today",
-    channel: "Meta Ads",
-  },
-  {
-    id: "ev-5",
-    name: "ABM hero — desktop proof",
-    status: "review" as const,
-    sheet: 2 as const,
-    variant: 5,
-    roas: "—",
-    lastCheck: "Queued",
-    channel: "LinkedIn",
-  },
-  {
-    id: "ev-6",
-    name: "Seasonal refresh — studio pack",
-    status: "verified" as const,
-    sheet: 3 as const,
-    variant: 2,
-    roas: "4.2x",
-    lastCheck: "3d ago",
-    channel: "Meta Ads",
-  },
-];
+const simulations = ref<SimulationRow[]>([]);
+const loading = ref(false);
+const loadError = ref<string | null>(null);
+const pushBusyId = ref<string | null>(null);
 
-function statusBadge(s: (typeof verifiedAssets)[number]["status"]): "success" | "info" | "warning" | "neutral" {
-  if (s === "verified") return "success";
-  if (s === "approved") return "info";
-  if (s === "review") return "warning";
+const statusLabels: Record<EvolveStatus, string> = {
+  draft: "Draft",
+  reviewed: "Reviewed",
+  ready_to_push: "Ready to Push",
+  pushed: "Pushed",
+  failed_validation: "Failed Validation",
+};
+
+function statusVariant(status: EvolveStatus): "neutral" | "info" | "success" | "warning" | "danger" {
+  if (status === "ready_to_push") return "success";
+  if (status === "pushed") return "info";
+  if (status === "failed_validation") return "danger";
+  if (status === "reviewed") return "warning";
   return "neutral";
 }
 
-function statusLabel(s: (typeof verifiedAssets)[number]["status"]) {
-  if (s === "verified") return "Verified";
-  if (s === "approved") return "Approved";
-  if (s === "review") return "In review";
-  return "Draft";
+function platformLabel(row: SimulationRow) {
+  return row.variants?.[0]?.platform || row.variants?.[0]?.label || "—";
 }
 
-const comparePair = verifiedAssets.slice(0, 2);
+function scoreLabel(row: SimulationRow) {
+  const score = row.run_summary?.overall_score;
+  return typeof score === "number" ? `${Math.round(score)}` : "—";
+}
 
-const metadataItems = [
-  { label: "Last synced", value: "12 min ago" },
-  { label: "Verified set", value: `${verifiedAssets.length} assets` },
-  { label: "Sync", value: "Canva (demo)" },
-  { label: "Ready for", value: "Lab + live" },
-];
+function recommendation(row: SimulationRow) {
+  return row.run_summary?.recommendation || "Run evaluation to generate recommendations.";
+}
+
+function budgetLabel(row: SimulationRow) {
+  const b = row.budget;
+  if (typeof b === "number") return `$${b.toLocaleString()}`;
+  if (b && typeof b === "object" && "amount" in b) {
+    const amt = Number((b as { amount?: unknown }).amount);
+    return Number.isFinite(amt) ? `$${amt.toLocaleString()}` : "—";
+  }
+  return "—";
+}
+
+function rowStatus(row: SimulationRow): EvolveStatus {
+  return validatePush(row).status;
+}
+
+function validationFailures(row: SimulationRow) {
+  return validatePush(row).failures;
+}
+
+function canPush(row: SimulationRow) {
+  return validatePush(row).eligible;
+}
+
+async function loadSimulations() {
+  // Playground bypass: serve pre-bundled simulation records.
+  if (playground.isPlayground.value && playground.simulationData.value) {
+    simulations.value = playground.simulationData.value.simulations.map((s) => ({
+      id: s.id,
+      name: s.name,
+      created_at: s.created_at,
+      updated_at: s.updated_at,
+      variants: s.connections.map((c) => ({ platform: c.connection_slug, label: c.category })),
+      evolve_status: s.evolve_status,
+      run_summary: undefined,
+    }));
+    loading.value = false;
+    loadError.value = null;
+    return;
+  }
+
+  const ws = workspace.currentWorkspaceId.value;
+  const bp = workspace.currentBrandProfileId.value;
+  if (!api.hasBase.value || !ws || !bp) return;
+  loading.value = true;
+  loadError.value = null;
+  try {
+    simulations.value = await api.getJson<SimulationRow[]>(
+      `/simulations${brandScopeQuery(ws, bp)}&limit=50`,
+    );
+  } catch {
+    loadError.value = "Could not load simulations.";
+    simulations.value = [];
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(() => {
+  void loadSimulations();
+});
+
+watch(
+  () => [workspace.currentWorkspaceId.value, workspace.currentBrandProfileId.value, playground.isPlayground.value] as const,
+  () => {
+    void loadSimulations();
+  },
+);
+
+async function markReviewed(row: SimulationRow) {
+  try {
+    await api.patchJson(`/simulations/${encodeURIComponent(row.id)}`, {
+      evolve_status: "reviewed",
+    });
+    await loadSimulations();
+  } catch {
+    loadError.value = "Could not update simulation status.";
+  }
+}
+
+async function pushToProduction(row: SimulationRow) {
+  if (!canPush(row)) return;
+  pushBusyId.value = row.id;
+  loadError.value = null;
+  try {
+    await api.patchJson(`/simulations/${encodeURIComponent(row.id)}`, {
+      evolve_status: "pushed",
+    });
+    await loadSimulations();
+  } catch {
+    loadError.value = "Push to production is not available yet for this platform.";
+  } finally {
+    pushBusyId.value = null;
+  }
+}
+
+function improveLink(row: SimulationRow) {
+  return `/app/simulation?duplicate_from=${encodeURIComponent(row.id)}`;
+}
+
+function reviewLink(row: SimulationRow) {
+  return `/app/simulation?simulation_id=${encodeURIComponent(row.id)}`;
+}
+
+const highlightedId = computed(() =>
+  typeof route.query.simulation_id === "string" ? route.query.simulation_id : null,
+);
 </script>
 
 <template>
   <div class="max-w-full space-y-5 overflow-x-hidden pb-2">
-    <PageHeader title="Evolve" dense metadata-tight hide-context>
-      <template #actions>
-        <button
-          type="button"
-          class="app-button button-secondary inline-flex min-h-[3rem] items-center gap-2 px-3 text-sm"
-        >
-          <Palette class="h-4 w-4 text-black/55" :stroke-width="1.9" aria-hidden="true" />
-          Open in Canva
-        </button>
-        <button
-          type="button"
-          class="app-button button-secondary inline-flex min-h-[3rem] items-center gap-2 px-3 text-sm"
-        >
-          <Download class="h-4 w-4 text-black/55" :stroke-width="1.9" aria-hidden="true" />
-          Export set
-        </button>
-        <NuxtLink
-          to="/app/lab"
-          class="app-button button-primary inline-flex min-h-[3rem] items-center gap-2 px-3 text-sm text-white"
-        >
-          <Sparkles class="h-4 w-4 opacity-90" :stroke-width="1.9" aria-hidden="true" />
-          Send to Lab
-          <ArrowRight class="h-4 w-4 opacity-80" :stroke-width="1.9" aria-hidden="true" />
-        </NuxtLink>
-      </template>
-    </PageHeader>
+    <PageHeader
+      title="Evolve"
+      description="Review simulation results, compare variants, and mark winning configs ready for your ad platform."
+      dense
+      metadata-tight
+      hide-context
+    />
 
-    <SurfaceCard variant="soft" padding="sm" class="border border-black/[0.05]">
-      <AnalyticsMetadataStrip :items="metadataItems" />
+    <!-- Platform push is not yet automated — be explicit with marketers -->
+    <SurfaceCard variant="soft" padding="sm" class="border border-amber-100 bg-amber-50/70">
+      <p class="text-[13px] text-amber-900">
+        <span class="font-semibold">Heads up:</span>
+        "Push to production" marks a simulation as ready and records the decision — it does not yet automatically create or update a live campaign on Meta Ads or any other platform.
+        You'll need to apply the winning config manually in your ad account.
+        Automated platform push is coming in a future release.
+      </p>
     </SurfaceCard>
 
-    <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      <SurfaceCard variant="frame" padding="sm">
-        <h2 class="sv-card-title">
-          Verified visuals
-        </h2>
-        <p class="mt-1 max-w-2xl text-[13px] leading-snug text-black/48">
-          Approval state and performance-ready cuts for experiments and publishing.
-        </p>
-        <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <article
-            v-for="asset in verifiedAssets"
-            :key="asset.id"
-            class="group flex flex-col overflow-hidden rounded-[1.15rem] border border-black/[0.07] bg-white shadow-[0_14px_40px_-28px_rgba(15,23,42,0.35)] transition hover:border-black/14"
-          >
-            <div class="relative aspect-[16/10] bg-black/[0.03]">
-              <CreativeVariantThumb
-                :src="gridSrc(asset.sheet)"
-                :sheet="asset.sheet"
-                :variant="asset.variant"
-                :alt="asset.name"
-                frame-class="absolute inset-0 h-full w-full rounded-none border-0"
-                crop-class="scale-[1.02]"
-              />
-              <div class="absolute left-2 top-2">
-                <StatusBadge :variant="statusBadge(asset.status)" :label="statusLabel(asset.status)" />
-              </div>
+    <SurfaceCard v-if="loadError" variant="soft" padding="sm" class="border border-red-200 bg-red-50/85">
+      <p class="text-[13px] font-semibold text-red-950">{{ loadError }}</p>
+    </SurfaceCard>
+
+    <SurfaceCard v-if="loading" variant="soft" padding="md" class="border border-black/[0.06]">
+      <p class="text-[13px] text-black/55">Loading simulations…</p>
+    </SurfaceCard>
+
+    <EmptyState
+      v-else-if="!simulations.length"
+      title="No simulations yet"
+      description="Run a simulation first, then review and improve it here."
+    >
+      <NuxtLink to="/app/simulation" class="app-button button-primary text-sm">
+        <FlaskConical class="h-4 w-4" :stroke-width="1.9" />
+        Start simulation
+      </NuxtLink>
+    </EmptyState>
+
+    <div v-else class="space-y-4">
+      <SurfaceCard
+        v-for="row in simulations"
+        :key="row.id"
+        variant="frame"
+        padding="md"
+        class="border border-black/[0.06]"
+        :class="highlightedId === row.id ? 'ring-2 ring-[rgba(91,123,225,0.35)]' : ''"
+      >
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <StatusBadge :label="statusLabels[rowStatus(row)]" :variant="statusVariant(rowStatus(row))" />
+              <span class="text-[12px] text-black/45">{{ platformLabel(row) }}</span>
             </div>
-            <div class="flex flex-1 flex-col gap-2 border-t border-black/[0.06] p-4">
-              <p class="line-clamp-2 text-[15px] font-semibold leading-snug text-black">
-                {{ asset.name }}
-              </p>
-              <div class="flex flex-wrap items-center gap-2 text-[12px] text-black/48">
-                <span>{{ asset.channel }}</span>
-                <span aria-hidden="true">·</span>
-                <span>ROAS {{ asset.roas }}</span>
-                <span aria-hidden="true">·</span>
-                <span>{{ asset.lastCheck }}</span>
-              </div>
+            <h2 class="mt-2 text-[1.1rem] font-semibold tracking-[-0.03em] text-black">{{ row.name }}</h2>
+            <p class="mt-2 text-[13px] text-black/55">{{ recommendation(row) }}</p>
+            <div class="mt-3 flex flex-wrap gap-4 text-[12px] text-black/45">
+              <span>Score: {{ scoreLabel(row) }}</span>
+              <span>Budget: {{ budgetLabel(row) }}</span>
+              <span v-if="row.created_at">Created: {{ new Date(row.created_at).toLocaleDateString() }}</span>
             </div>
-          </article>
+            <ul v-if="validationFailures(row).length" class="mt-3 space-y-1">
+              <li
+                v-for="(failure, idx) in validationFailures(row)"
+                :key="idx"
+                class="text-[12px] text-red-700"
+              >
+                {{ failure }}
+              </li>
+            </ul>
+          </div>
+          <div class="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col">
+            <NuxtLink :to="reviewLink(row)" class="app-button button-secondary text-sm">
+              Review
+              <ArrowRight class="h-4 w-4" :stroke-width="1.9" />
+            </NuxtLink>
+            <NuxtLink :to="improveLink(row)" class="app-button button-secondary text-sm">
+              <Copy class="h-4 w-4" :stroke-width="1.9" />
+              Duplicate / improve
+            </NuxtLink>
+            <button
+              type="button"
+              class="app-button button-secondary text-sm"
+              :disabled="rowStatus(row) === 'pushed'"
+              @click="markReviewed(row)"
+            >
+              Mark reviewed
+            </button>
+            <button
+              type="button"
+              class="app-button button-primary text-sm"
+              :disabled="!canPush(row) || pushBusyId === row.id"
+              :title="!canPush(row) ? validationFailures(row).join(' ') : undefined"
+              @click="pushToProduction(row)"
+            >
+              <Rocket class="h-4 w-4" :stroke-width="1.9" />
+              {{ pushBusyId === row.id ? "Saving…" : rowStatus(row) === "pushed" ? "Marked ready" : "Mark ready to push" }}
+            </button>
+          </div>
         </div>
       </SurfaceCard>
-
-      <div class="space-y-4">
-        <SurfaceCard variant="frame" padding="sm">
-          <h3 class="sv-card-title">
-            Compare
-          </h3>
-          <p class="mt-1 text-[13px] leading-snug text-black/48">
-            Two variants side by side before you promote or send to Lab.
-          </p>
-          <div class="mt-4 grid grid-cols-2 gap-2">
-            <div
-              v-for="asset in comparePair"
-              :key="asset.id"
-              class="overflow-hidden rounded-xl border border-black/10 bg-black/[0.02]"
-            >
-              <CreativeVariantThumb
-                :src="gridSrc(asset.sheet)"
-                :sheet="asset.sheet"
-                :variant="asset.variant"
-                :alt="asset.name"
-                frame-class="aspect-[4/5] w-full"
-              />
-              <p class="border-t border-black/8 p-2 text-[11px] font-semibold leading-tight text-black/70">
-                {{ asset.name }}
-              </p>
-            </div>
-          </div>
-          <button type="button" class="app-button button-secondary mt-4 w-full min-h-[2.75rem] text-sm">
-            Open comparison
-          </button>
-        </SurfaceCard>
-
-        <SurfaceCard variant="soft" padding="sm">
-          <div class="flex items-start gap-2.5">
-            <CheckCircle2 class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600/90" :stroke-width="1.9" aria-hidden="true" />
-            <div>
-              <p class="sv-section-title">
-                Verification
-              </p>
-              <p class="mt-1 text-[13px] leading-relaxed text-black/48">
-                Brand-safe, legible, and platform-ready — handoff from design tools to Lab and live campaigns.
-              </p>
-            </div>
-          </div>
-        </SurfaceCard>
-      </div>
-    </section>
+    </div>
   </div>
 </template>

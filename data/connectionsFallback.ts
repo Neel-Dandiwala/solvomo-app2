@@ -1,7 +1,7 @@
 import type { MockConnection } from "~/types/mock";
 
 /** Shown when the bundle has no connector rows so the page stays product-ready. */
-/** Ids align with `integrationsCatalog` `shellKey` values where applicable. */
+/** Demo shell connection ids for unauthenticated overview states. */
 export const demoConnectionsFallback: MockConnection[] = [
   {
     id: "meta",

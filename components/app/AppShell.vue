@@ -1,10 +1,9 @@
 <script setup lang="ts">
+import PlaygroundBanner from "./PlaygroundBanner.vue";
+
 const route = useRoute();
 const auth = useAuth();
 const { isPlayground, sidebarCollapsed, mobileNavOpen, closeMobileNav } = useWorkspaceContext();
-
-auth.restoreSession();
-auth.ensureHydrated();
 
 watch(
   () => route.fullPath,

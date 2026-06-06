@@ -1,13 +1,22 @@
-export const reportingMeta = {
+const DEMO_REPORTING_META = {
   label: "Demo analytics",
-  lastSynced: "8 minutes ago",
+  lastSynced: "—",
   comparisonLabel: "vs previous 28 days",
   activeCampaigns: 6,
   attributionModel: "Hybrid multi-touch",
   confidenceLabel: "High confidence",
-};
+} as const;
 
-const performanceCampaigns = [
+const EMPTY_REPORTING_META = {
+  label: "Analytics",
+  lastSynced: "—",
+  comparisonLabel: "—",
+  activeCampaigns: 0,
+  attributionModel: "—",
+  confidenceLabel: "—",
+} as const;
+
+const DEMO_PERFORMANCE_CAMPAIGNS = [
   {
     id: "cmp-meta-prospecting",
     name: "Meta Prospecting - Founder Narrative",
@@ -112,7 +121,7 @@ const performanceCampaigns = [
   },
 ] as const;
 
-const performanceTrend = [
+const DEMO_PERFORMANCE_TREND = [
   { label: "Wk 1", spend: 8900, revenue: 39000, leads: 116, sqls: 32, pipeline: 61000 },
   { label: "Wk 2", spend: 9800, revenue: 45000, leads: 126, sqls: 36, pipeline: 69000 },
   { label: "Wk 3", spend: 10100, revenue: 49000, leads: 142, sqls: 40, pipeline: 75000 },
@@ -350,12 +359,9 @@ function makeAdGridCreativeAssets() {
   return rows;
 }
 
-const creativeAssets = [...creativeAssetsLegacy, ...makeAdGridCreativeAssets()];
+const DEMO_CREATIVE_ASSETS = [...creativeAssetsLegacy, ...makeAdGridCreativeAssets()];
 
-/** Direct imports for pages that must not rely on composable return shape (e.g. Creatives table / allocation). */
-export { performanceCampaigns, creativeAssets };
-
-const audienceSegments = [
+const DEMO_AUDIENCE_SEGMENTS = [
   {
     id: "aud-remarketing-30d",
     name: "Remarketing - Site Visitors 30D",
@@ -462,7 +468,7 @@ const audienceSegments = [
   },
 ] as const;
 
-const audienceDemographics = [
+const DEMO_AUDIENCE_DEMOGRAPHICS = [
   { label: "25-34", spend: 29400, revenue: 160000 },
   { label: "35-44", spend: 25600, revenue: 138000 },
   { label: "45-54", spend: 14800, revenue: 78000 },
@@ -470,24 +476,21 @@ const audienceDemographics = [
   { label: "55+", spend: 9900, revenue: 36000 },
 ] as const;
 
-const audienceGeos = [
+const DEMO_AUDIENCE_GEOS = [
   { label: "North America", spend: 58000, revenue: 324000 },
   { label: "UK", spend: 11800, revenue: 56000 },
   { label: "Continental Europe", spend: 10500, revenue: 35000 },
   { label: "APAC", spend: 4700, revenue: 15000 },
 ] as const;
 
-const audienceDevices = [
+const DEMO_AUDIENCE_DEVICES = [
   { label: "Desktop", spend: 37500, revenue: 226000, cvr: 1.83 },
   { label: "Mobile", spend: 40600, revenue: 176000, cvr: 1.31 },
   { label: "Tablet", spend: 3600, revenue: 14000, cvr: 1.12 },
   { label: "CTV", spend: 3300, revenue: 14000, cvr: 0.92 },
 ] as const;
 
-/** Direct imports for Audience page charts/tables (avoids composable return edge cases in SSR). */
-export { audienceSegments, audienceDemographics, audienceGeos, audienceDevices };
-
-const spendBudgetByWeek = [
+const DEMO_SPEND_BUDGET_BY_WEEK = [
   { label: "Wk 1", actual: 8900, budget: 9400, primaryDriver: "Meta prospecting", roas: 4.4 },
   { label: "Wk 2", actual: 9800, budget: 9800, primaryDriver: "Meta retargeting", roas: 4.6 },
   { label: "Wk 3", actual: 10100, budget: 10200, primaryDriver: "Google brand", roas: 4.9 },
@@ -498,7 +501,7 @@ const spendBudgetByWeek = [
   { label: "Wk 8", actual: 12100, budget: 11500, primaryDriver: "Google brand", roas: 5.9 },
 ] as const;
 
-const campaignPacing = [
+const DEMO_CAMPAIGN_PACING = [
   { id: "pace-1", campaign: "Meta Prospecting - Founder Narrative", channel: "Meta Ads", region: "North America", objective: "Demand generation", budget: 27000, actual: 28400, pace: 105, alert: "Overpacing" },
   { id: "pace-2", campaign: "Meta Retargeting - Site Visitors 30D", channel: "Meta Ads", region: "Global", objective: "Retargeting", budget: 13400, actual: 14200, pace: 106, alert: "Overpacing" },
   { id: "pace-3", campaign: "Google Brand Search - High Intent", channel: "Google Ads", region: "Global", objective: "Brand capture", budget: 12000, actual: 11600, pace: 97, alert: "On plan" },
@@ -508,7 +511,7 @@ const campaignPacing = [
 ] as const;
 
 /** Demo ledger lines for Spend tab (filterable by channel / region). */
-const spendLedgerTransactions = [
+const DEMO_SPEND_LEDGER_TRANSACTIONS = [
   { id: "tx-1", date: "2026-04-08", campaign: "Meta Prospecting - Founder Narrative", channel: "Meta Ads", region: "North America", amount: 4200, status: "Settled", goal: "Demand generation" },
   { id: "tx-2", date: "2026-04-08", campaign: "Meta Retargeting - Site Visitors 30D", channel: "Meta Ads", region: "Global", amount: 2100, status: "Settled", goal: "Retargeting" },
   { id: "tx-3", date: "2026-04-07", campaign: "Google Brand Search - High Intent", channel: "Google Ads", region: "Global", amount: 1800, status: "Settled", goal: "Brand capture" },
@@ -541,9 +544,13 @@ export const mockSpendObjectiveBreakdown = [
 ] as const;
 
 /** Direct imports for Spend page charts/tables (stable SSR + client; avoids composable unwrap quirks). */
-export { spendBudgetByWeek, campaignPacing, spendLedgerTransactions };
+export {
+  DEMO_SPEND_BUDGET_BY_WEEK as spendBudgetByWeek,
+  DEMO_CAMPAIGN_PACING as campaignPacing,
+  DEMO_SPEND_LEDGER_TRANSACTIONS as spendLedgerTransactions,
+};
 
-const signalQuality = [
+const DEMO_SIGNAL_QUALITY = [
   {
     id: "sig-match-rate",
     label: "CRM match rate",
@@ -629,15 +636,48 @@ function statusVariant(label: string): "success" | "warning" | "danger" | "info"
 }
 
 export function useDemoAnalytics() {
+  const workspace = useWorkspaceContext();
+  const isPlaygroundDemo = computed(
+    () =>
+      workspace.isPlayground.value && Boolean(workspace.currentBrandProfile.value?.isPlaygroundSystem),
+  );
+
+  const reportingMeta = computed(() => (isPlaygroundDemo.value ? DEMO_REPORTING_META : EMPTY_REPORTING_META));
+
+  const performanceCampaigns = computed(() =>
+    isPlaygroundDemo.value ? DEMO_PERFORMANCE_CAMPAIGNS : [],
+  );
+
+  const performanceTrend = computed(() => (isPlaygroundDemo.value ? DEMO_PERFORMANCE_TREND : []));
+
+  const creativeAssets = computed(() => (isPlaygroundDemo.value ? DEMO_CREATIVE_ASSETS : []));
+
+  const audienceSegments = computed(() => (isPlaygroundDemo.value ? DEMO_AUDIENCE_SEGMENTS : []));
+
+  const audienceDemographics = computed(() => (isPlaygroundDemo.value ? DEMO_AUDIENCE_DEMOGRAPHICS : []));
+
+  const audienceGeos = computed(() => (isPlaygroundDemo.value ? DEMO_AUDIENCE_GEOS : []));
+
+  const audienceDevices = computed(() => (isPlaygroundDemo.value ? DEMO_AUDIENCE_DEVICES : []));
+
+  const spendBudgetByWeek = computed(() => (isPlaygroundDemo.value ? DEMO_SPEND_BUDGET_BY_WEEK : []));
+
+  const campaignPacing = computed(() => (isPlaygroundDemo.value ? DEMO_CAMPAIGN_PACING : []));
+
+  const spendLedgerTransactions = computed(() => (isPlaygroundDemo.value ? DEMO_SPEND_LEDGER_TRANSACTIONS : []));
+
+  const signalQuality = computed(() => (isPlaygroundDemo.value ? DEMO_SIGNAL_QUALITY : []));
+
   const totals = computed(() => {
-    const spend = sumBy(performanceCampaigns, (row) => row.spend);
-    const impressions = sumBy(performanceCampaigns, (row) => row.impressions);
-    const clicks = sumBy(performanceCampaigns, (row) => row.clicks);
-    const leads = sumBy(performanceCampaigns, (row) => row.leads);
-    const sqls = sumBy(performanceCampaigns, (row) => row.sqls);
-    const purchases = sumBy(performanceCampaigns, (row) => row.purchases);
-    const pipeline = sumBy(performanceCampaigns, (row) => row.pipeline);
-    const revenue = sumBy(performanceCampaigns, (row) => row.revenue);
+    const rows = isPlaygroundDemo.value ? DEMO_PERFORMANCE_CAMPAIGNS : [];
+    const spend = sumBy(rows, (row) => row.spend);
+    const impressions = sumBy(rows, (row) => row.impressions);
+    const clicks = sumBy(rows, (row) => row.clicks);
+    const leads = sumBy(rows, (row) => row.leads);
+    const sqls = sumBy(rows, (row) => row.sqls);
+    const purchases = sumBy(rows, (row) => row.purchases);
+    const pipeline = sumBy(rows, (row) => row.pipeline);
+    const revenue = sumBy(rows, (row) => row.revenue);
 
     return {
       spend,
@@ -648,65 +688,65 @@ export function useDemoAnalytics() {
       purchases,
       pipeline,
       revenue,
-      ctr: (clicks / impressions) * 100,
-      cpc: spend / clicks,
-      cvr: (leads / clicks) * 100,
-      cpa: spend / leads,
-      roas: revenue / spend,
-      cac: spend / purchases,
-      mer: revenue / spend,
+      ctr: impressions > 0 ? (clicks / impressions) * 100 : 0,
+      cpc: clicks > 0 ? spend / clicks : 0,
+      cvr: clicks > 0 ? (leads / clicks) * 100 : 0,
+      cpa: leads > 0 ? spend / leads : 0,
+      roas: spend > 0 ? revenue / spend : 0,
+      cac: purchases > 0 ? spend / purchases : 0,
+      mer: spend > 0 ? revenue / spend : 0,
     };
   });
 
   const performanceChannels = computed(() =>
-    ["All", ...new Set(performanceCampaigns.map((row) => row.channel))],
+    ["All", ...new Set(performanceCampaigns.value.map((row) => row.channel))],
   );
 
   const performanceRegions = computed(() =>
-    ["All", ...new Set(performanceCampaigns.map((row) => row.region))],
+    ["All", ...new Set(performanceCampaigns.value.map((row) => row.region))],
   );
 
   const creativeFormats = computed(() =>
-    ["All formats", ...new Set(creativeAssets.map((row) => row.format))],
+    ["All formats", ...new Set(creativeAssets.value.map((row) => row.format))],
   );
 
   const creativePlatforms = computed(() =>
-    ["All platforms", ...new Set(creativeAssets.map((row) => row.platform))],
+    ["All platforms", ...new Set(creativeAssets.value.map((row) => row.platform))],
   );
 
   const audienceTypes = computed(() =>
-    ["All segments", ...new Set(audienceSegments.map((row) => row.type))],
+    ["All segments", ...new Set(audienceSegments.value.map((row) => row.type))],
   );
 
   const audienceChannels = computed(() =>
-    ["All", ...Array.from(new Set(audienceSegments.map((row) => row.channel))).sort((a, b) => a.localeCompare(b))],
+    ["All", ...Array.from(new Set(audienceSegments.value.map((row) => row.channel))).sort((a, b) => a.localeCompare(b))],
   );
 
   const audienceRegions = computed(() =>
-    ["All", ...Array.from(new Set(audienceSegments.map((row) => row.geo))).sort((a, b) => a.localeCompare(b))],
+    ["All", ...Array.from(new Set(audienceSegments.value.map((row) => row.geo))).sort((a, b) => a.localeCompare(b))],
   );
 
   const audienceDevicesList = computed(() =>
-    ["All devices", ...new Set(audienceSegments.map((row) => row.device))],
+    ["All devices", ...new Set(audienceSegments.value.map((row) => row.device))],
   );
 
   const spendChannels = computed(() =>
-    ["All channels", ...new Set(campaignPacing.map((row) => row.channel))],
+    ["All channels", ...new Set(campaignPacing.value.map((row) => row.channel))],
   );
 
   const spendObjectives = computed(() =>
-    ["All objectives", ...new Set(campaignPacing.map((row) => row.objective))],
+    ["All objectives", ...new Set(campaignPacing.value.map((row) => row.objective))],
   );
 
   const outcomeSources = computed(() =>
-    ["All sources", ...new Set(performanceCampaigns.map((row) => row.channel))],
+    ["All sources", ...new Set(performanceCampaigns.value.map((row) => row.channel))],
   );
 
   const creativeFormatBreakdown = computed(() => {
     const grouped = new Map<string, { spend: number; revenue: number; conversions: number; avgCtrWeighted: number; impressions: number }>();
 
-    creativeAssets.forEach((asset) => {
-      const current = grouped.get(asset.format) ?? { spend: 0, revenue: 0, conversions: 0, avgCtrWeighted: 0, impressions: 0 };
+    creativeAssets.value.forEach((asset) => {
+      const current = grouped.get(asset.format) || { spend: 0, revenue: 0, conversions: 0, avgCtrWeighted: 0, impressions: 0 };
       current.spend += asset.spend;
       current.revenue += asset.revenue;
       current.conversions += asset.conversions;
@@ -720,16 +760,16 @@ export function useDemoAnalytics() {
       spend: value.spend,
       revenue: value.revenue,
       conversions: value.conversions,
-      ctr: value.avgCtrWeighted / value.impressions,
-      roas: value.revenue / value.spend,
+      ctr: value.impressions > 0 ? value.avgCtrWeighted / value.impressions : 0,
+      roas: value.spend > 0 ? value.revenue / value.spend : 0,
     })).sort((left, right) => right.revenue - left.revenue);
   });
 
   const performanceChannelBreakdown = computed(() => {
     const grouped = new Map<string, { spend: number; revenue: number; leads: number; clicks: number }>();
 
-    performanceCampaigns.forEach((campaign) => {
-      const current = grouped.get(campaign.channel) ?? { spend: 0, revenue: 0, leads: 0, clicks: 0 };
+    performanceCampaigns.value.forEach((campaign) => {
+      const current = grouped.get(campaign.channel) || { spend: 0, revenue: 0, leads: 0, clicks: 0 };
       current.spend += campaign.spend;
       current.revenue += campaign.revenue;
       current.leads += campaign.leads;
@@ -742,14 +782,14 @@ export function useDemoAnalytics() {
       spend: value.spend,
       revenue: value.revenue,
       leads: value.leads,
-      roas: value.revenue / value.spend,
-      cpl: value.spend / value.leads,
+      roas: value.spend > 0 ? value.revenue / value.spend : 0,
+      cpl: value.leads > 0 ? value.spend / value.leads : 0,
     })).sort((left, right) => right.spend - left.spend);
   });
 
   const sourceOutcomes = computed(() =>
     performanceChannelBreakdown.value.map((row) => {
-      const campaigns = performanceCampaigns.filter((campaign) => campaign.channel === row.label);
+      const campaigns = performanceCampaigns.value.filter((campaign) => campaign.channel === row.label);
       return {
         source: row.label,
         leads: sumBy(campaigns, (campaign) => campaign.leads),
@@ -764,8 +804,8 @@ export function useDemoAnalytics() {
   const spendObjectiveBreakdown = computed(() => {
     const grouped = new Map<string, { spend: number; revenue: number }>();
 
-    performanceCampaigns.forEach((campaign) => {
-      const current = grouped.get(campaign.objective) ?? { spend: 0, revenue: 0 };
+    performanceCampaigns.value.forEach((campaign) => {
+      const current = grouped.get(campaign.objective) || { spend: 0, revenue: 0 };
       current.spend += campaign.spend;
       current.revenue += campaign.revenue;
       grouped.set(campaign.objective, current);
@@ -775,67 +815,80 @@ export function useDemoAnalytics() {
       label,
       spend: value.spend,
       revenue: value.revenue,
-      roas: value.revenue / value.spend,
+      roas: value.spend > 0 ? value.revenue / value.spend : 0,
     })).sort((left, right) => right.spend - left.spend);
   });
 
-  const audienceComparisonCards = computed(() => [
-    {
-      title: "Top converting segment",
-      value: "Remarketing - Site Visitors 30D",
-      note: "2.51% CVR and the lowest CPA in the mix at $39.89.",
-    },
-    {
-      title: "High spend low return",
-      value: "ABM Target Accounts",
-      note: "Strong pipeline influence, but direct ROAS is still below blended average.",
-    },
-    {
-      title: "Desktop quality edge",
-      value: "6.0x ROAS",
-      note: "Desktop sessions carry the strongest post-click conversion quality.",
-    },
-    {
-      title: "Overlap to watch",
-      value: "18% between lookalikes and remarketing",
-      note: "Frequency will climb quickly if Meta prospecting keeps scaling without exclusions.",
-    },
-  ]);
+  const audienceComparisonCards = computed(() =>
+    isPlaygroundDemo.value
+      ? [
+          {
+            title: "Top converting segment",
+            value: "Remarketing - Site Visitors 30D",
+            note: "2.51% CVR and the lowest CPA in the mix at $39.89.",
+          },
+          {
+            title: "High spend low return",
+            value: "ABM Target Accounts",
+            note: "Strong pipeline influence, but direct ROAS is still below blended average.",
+          },
+          {
+            title: "Desktop quality edge",
+            value: "6.0x ROAS",
+            note: "Desktop sessions carry the strongest post-click conversion quality.",
+          },
+          {
+            title: "Overlap to watch",
+            value: "18% between lookalikes and remarketing",
+            note: "Frequency will climb quickly if Meta prospecting keeps scaling without exclusions.",
+          },
+        ]
+      : [],
+  );
 
-  const creativeInsights = computed(() => [
-    {
-      title: "Top creative cluster",
-      value: "Founder-led UGC",
-      note: "UGC and founder narrative assets are driving 53% of tracked creative revenue.",
-    },
-    {
-      title: "Fatigue risk",
-      value: "ROI Proof Static",
-      note: "74 fatigue score after 29 days live and CTR below the account average.",
-    },
-    {
-      title: "Format signal",
-      value: "Carousel retargeting is quietly strong",
-      note: "Carousel assets are delivering 5.2x ROAS with healthy post-click CVR.",
-    },
-  ]);
+  const creativeInsights = computed(() =>
+    isPlaygroundDemo.value
+      ? [
+          {
+            title: "Top creative cluster",
+            value: "Founder-led UGC",
+            note: "UGC and founder narrative assets are driving 53% of tracked creative revenue.",
+          },
+          {
+            title: "Fatigue risk",
+            value: "ROI Proof Static",
+            note: "74 fatigue score after 29 days live and CTR below the account average.",
+          },
+          {
+            title: "Format signal",
+            value: "Carousel retargeting is quietly strong",
+            note: "Carousel assets are delivering 5.2x ROAS with healthy post-click CVR.",
+          },
+        ]
+      : [],
+  );
 
-  const spendRecommendations = computed(() => [
-    {
-      title: "Trim LinkedIn ABM by 12%",
-      body: "Current pace is 81% of plan with softer direct return. Keep spend focused on the highest-fit account list until win rate improves.",
-    },
-    {
-      title: "Protect brand search capacity",
-      body: "Google brand is the highest-ROAS campaign in the mix and should keep priority in any budget rebalance.",
-    },
-    {
-      title: "Refresh YouTube proof assets",
-      body: "Customer proof video still assists the funnel, but CTR and fatigue suggest creative rotation before additional budget.",
-    },
-  ]);
+  const spendRecommendations = computed(() =>
+    isPlaygroundDemo.value
+      ? [
+          {
+            title: "Trim LinkedIn ABM by 12%",
+            body: "Current pace is 81% of plan with softer direct return. Keep spend focused on the highest-fit account list until win rate improves.",
+          },
+          {
+            title: "Protect brand search capacity",
+            body: "Google brand is the highest-ROAS campaign in the mix and should keep priority in any budget rebalance.",
+          },
+          {
+            title: "Refresh YouTube proof assets",
+            body: "Customer proof video still assists the funnel, but CTR and fatigue suggest creative rotation before additional budget.",
+          },
+        ]
+      : [],
+  );
 
   return {
+    isPlaygroundDemo,
     reportingMeta,
     performanceCampaigns,
     performanceTrend,
@@ -877,3 +930,7 @@ export function useDemoAnalytics() {
     statusVariant,
   };
 }
+
+export type DemoPerformanceCampaign = (typeof DEMO_PERFORMANCE_CAMPAIGNS)[number];
+export type DemoCreativeAsset = (typeof DEMO_CREATIVE_ASSETS)[number];
+export type DemoAudienceSegment = (typeof DEMO_AUDIENCE_SEGMENTS)[number];

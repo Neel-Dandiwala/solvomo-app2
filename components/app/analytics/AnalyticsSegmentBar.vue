@@ -11,7 +11,7 @@ const props = defineProps<{
   }>;
 }>();
 
-const segmentList = computed(() => props.segments ?? []);
+const segmentList = computed(() => props.segments || []);
 
 /** Plain number for template math (avoid ref edge cases in :style bindings). */
 const segmentTotal = computed(() =>
@@ -56,7 +56,7 @@ function toneClass(tone?: string) {
         </div>
         <div class="text-right">
           <div class="text-[14px] font-semibold text-black">
-            {{ segment.valueLabel ?? `${Math.round((segment.value / Math.max(segmentTotal, 1)) * 100)}%` }}
+            {{ segment.valueLabel || `${Math.round((segment.value / Math.max(segmentTotal, 1)) * 100)}%` }}
           </div>
           <div class="text-[12px] text-black/46">
             {{ Math.round((segment.value / Math.max(segmentTotal, 1)) * 100) }}%

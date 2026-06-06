@@ -1,65 +1,72 @@
-const ONBOARDING_ORDER = ["/onboarding/survey", "/onboarding/brand-setup", "/onboarding/connections"] as const;
+import {
+  ONBOARDING_ROUTE_BY_STEP,
+  ONBOARDING_STEPS,
+  firstIncompleteOnboardingIndex,
+  isOnboardingCompleteForSteps,
+  nextOnboardingPathForSteps,
+  onboardingStepIndexForPath,
+} from "~/utils/onboardingFlow";
 
-function firstIncompleteOnboardingIndex(auth: ReturnType<typeof useAuth>): number {
-  const done = auth.session.value?.onboardingSteps ?? [];
-  if (!done.includes("survey")) return 0;
-  if (!done.includes("brand")) return 1;
-  if (!done.includes("connections")) return 2;
-  return 3;
-}
-
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   const auth = useAuth();
-  auth.restoreSession();
+  if (!auth.isHydrated.value) {
+    await auth.ensureHydrated();
+  }
   const path = to.path;
+  const steps = auth.session.value?.onboardingSteps || [];
+  const onboardingComplete = isOnboardingCompleteForSteps(steps);
 
   const isApp = path.startsWith("/app");
   const isOnboarding = path.startsWith("/onboarding");
-  const isLogin = path === "/login";
+  const isLogin = path === "/";
   const isSignup = path === "/signup";
   const isHome = path === "/";
 
   if (isHome && auth.isAuthenticated.value) {
     return navigateTo(
-      auth.isOnboardingComplete.value ? "/app" : auth.nextOnboardingPath(),
+      onboardingComplete ? "/app" : nextOnboardingPathForSteps(steps),
     );
   }
 
   if (isApp) {
     if (!auth.isAuthenticated.value) {
-      return navigateTo({ path: "/login", query: { redirect: to.fullPath } });
+      return navigateTo({ path: "/", query: { redirect: to.fullPath } });
     }
-    if (!auth.isOnboardingComplete.value) {
-      const next = auth.nextOnboardingPath();
-      return navigateTo(next);
+    if (!onboardingComplete) {
+      return navigateTo(nextOnboardingPathForSteps(steps));
     }
   }
 
   if (isOnboarding) {
     if (!auth.isAuthenticated.value) {
-      return navigateTo({ path: "/login", query: { redirect: to.fullPath } });
+      return navigateTo({ path: "/", query: { redirect: to.fullPath } });
     }
-    if (auth.isOnboardingComplete.value) {
+    if (onboardingComplete) {
       return navigateTo("/app");
     }
 
     if (path === "/onboarding" || path === "/onboarding/") {
-      return navigateTo(auth.nextOnboardingPath());
+      return navigateTo(nextOnboardingPathForSteps(steps));
     }
 
-    const idx = ONBOARDING_ORDER.indexOf(path as (typeof ONBOARDING_ORDER)[number]);
-    if (idx !== -1) {
-      const need = firstIncompleteOnboardingIndex(auth);
-      if (idx > need) {
-        return navigateTo(ONBOARDING_ORDER[need]);
-      }
+    if (path === "/onboarding/connections") {
+      return navigateTo(nextOnboardingPathForSteps(steps), { replace: true });
+    }
+
+    const knownOnboardingPath = ONBOARDING_STEPS.some(
+      (step) => ONBOARDING_ROUTE_BY_STEP[step] === path,
+    );
+    const idx = onboardingStepIndexForPath(path);
+    const requiredIdx = firstIncompleteOnboardingIndex(steps);
+    if (knownOnboardingPath && idx > requiredIdx && requiredIdx < ONBOARDING_STEPS.length) {
+      return navigateTo(nextOnboardingPathForSteps(steps));
     }
   }
 
   if (isLogin || isSignup) {
     if (auth.isAuthenticated.value) {
-      if (!auth.isOnboardingComplete.value) {
-        return navigateTo(auth.nextOnboardingPath());
+      if (!onboardingComplete) {
+        return navigateTo(nextOnboardingPathForSteps(steps));
       }
       return navigateTo("/app");
     }

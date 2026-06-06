@@ -11,9 +11,8 @@ function onDocClick(e: MouseEvent) {
 }
 
 async function signOut() {
-  auth.logout();
   open.value = false;
-  await navigateTo("/login");
+  await auth.logout();
 }
 
 onMounted(() => document.addEventListener("click", onDocClick));

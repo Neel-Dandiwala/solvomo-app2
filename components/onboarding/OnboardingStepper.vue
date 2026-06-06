@@ -1,20 +1,18 @@
 <script setup lang="ts">
 defineProps<{
-  /** 0 = goals, 1 = brand, 2 = connect, 3 = ready */
+  /** 0 = about you, 1 = brand profile */
   activeIndex: number;
 }>();
 
 const steps = [
-  { key: "goals", label: "About your goals", caption: "Shape your command center" },
-  { key: "brand", label: "Brand setup", caption: "Scoped to this workspace" },
-  { key: "connect", label: "Connect data", caption: "Unlock signals" },
-  { key: "ready", label: "Ready", caption: "Open Overview" },
+  { key: "you", label: "About you" },
+  { key: "brand", label: "Brand profile" },
 ] as const;
 </script>
 
 <template>
   <nav class="sv-stepper rounded-2xl border border-black/8 bg-white/95 px-4 py-4 sm:px-6 sm:py-5" aria-label="Onboarding progress">
-    <ol class="grid gap-5 sm:grid-cols-4">
+    <ol class="grid gap-6 sm:grid-cols-2">
       <li
         v-for="(s, i) in steps"
         :key="s.key"
@@ -38,9 +36,6 @@ const steps = [
             :class="i === activeIndex ? 'text-black' : i < activeIndex ? 'text-black/65' : 'text-black/40'"
           >
             {{ s.label }}
-          </p>
-          <p class="mt-1 text-xs leading-snug text-black/45">
-            {{ s.caption }}
           </p>
         </div>
       </li>

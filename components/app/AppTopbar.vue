@@ -3,9 +3,9 @@ import { ChevronDown, Menu } from "lucide-vue-next";
 import UserMenu from "~/components/app/UserMenu.vue";
 
 const {
-  brandsForWorkspace,
-  currentBrand,
-  setBrand,
+  brandProfilesForWorkspace,
+  currentBrandProfile,
+  setBrandProfile,
   toggleMobileNav,
 } = useWorkspaceContext();
 
@@ -34,7 +34,7 @@ onUnmounted(() => document.removeEventListener("click", onBrandDocClick));
       </button>
       <div class="min-w-0 flex-1">
         <p class="sv-meta hidden sm:block">
-          {{ currentBrand?.name }}
+          {{ currentBrandProfile?.name }}
         </p>
       </div>
       <div class="hidden min-w-0 max-w-[18rem] flex-1 justify-center px-2 2xl:flex lg:max-w-[20rem] lg:flex-none">
@@ -55,8 +55,8 @@ onUnmounted(() => document.removeEventListener("click", onBrandDocClick));
           @click.stop="brandOpen = !brandOpen"
         >
           <span class="min-w-0">
-            <span class="sv-control-label block truncate">Brand</span>
-            <span class="block truncate text-[15px] font-semibold text-black">{{ currentBrand?.name }}</span>
+            <span class="sv-control-label block truncate">Brand profile</span>
+            <span class="block truncate text-[15px] font-semibold text-black">{{ currentBrandProfile?.name }}</span>
           </span>
           <ChevronDown class="ml-auto h-4 w-4 shrink-0 text-black/40" :stroke-width="1.9" aria-hidden="true" />
         </button>
@@ -67,24 +67,27 @@ onUnmounted(() => document.removeEventListener("click", onBrandDocClick));
             role="listbox"
           >
             <li class="sv-control-label px-3 py-2">
-              Brand
+              Brand profiles
             </li>
-            <li v-for="b in brandsForWorkspace" :key="b.id">
+            <li v-for="b in brandProfilesForWorkspace" :key="b.id">
               <button
                 type="button"
                 class="flex w-full flex-col rounded-xl px-3 py-2.5 text-left text-sm hover:bg-black/[0.03]"
-                :class="b.id === currentBrand?.id ? 'bg-black/[0.035] font-semibold' : ''"
-                @click="setBrand(b.id); brandOpen = false"
+                :class="b.id === currentBrandProfile?.id ? 'bg-black/[0.035] font-semibold' : ''"
+                @click="setBrandProfile(b.id); brandOpen = false"
               >
                 <span class="text-[0.95rem] text-black">{{ b.name }}</span>
+                <span
+                  v-if="b.isPlaygroundSystem"
+                  class="mt-0.5 text-[12px] font-medium text-black/45"
+                >
+                  Sample data · always available
+                </span>
                 <span class="mt-1 text-[13px] leading-relaxed text-black/55">{{ b.currency }} · {{ b.attributionPreference }}</span>
               </button>
             </li>
           </ul>
         </Transition>
-      </div>
-      <div class="hidden lg:block">
-        <EnvironmentSwitcher />
       </div>
       <UserMenu />
     </div>

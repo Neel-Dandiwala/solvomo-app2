@@ -1,8 +1,10 @@
 <script setup lang="ts">
-const { setEnvironmentKind } = useWorkspaceContext();
+const { brandProfiles, currentWorkspaceId, setBrandProfile } = useWorkspaceContext();
 
 function switchToProduction() {
-  setEnvironmentKind("production");
+  const ws = currentWorkspaceId.value;
+  const prod = brandProfiles.value.find((b) => b.workspaceId === ws && !b.isPlaygroundSystem);
+  if (prod) setBrandProfile(prod.id);
 }
 </script>
 
@@ -15,9 +17,9 @@ function switchToProduction() {
     <p class="max-w-4xl text-sm font-semibold text-black/80">
       <span class="eyebrow mr-2 rounded-full">
         <span class="eyebrow-dot" />
-        Playground
+        Sandbox
       </span>
-      You are in Playground. Changes here are safe for testing until deployed.
+      You are in the sandbox workspace. Changes here do not affect production reporting.
     </p>
     <button
       type="button"

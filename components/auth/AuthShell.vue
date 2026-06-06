@@ -2,8 +2,8 @@
 export default defineNuxtComponent({
   name: "AuthShell",
   props: {
-    alternateHref: { type: String, required: true },
-    alternateLabel: { type: String, required: true },
+    alternateHref: { type: String, default: "" },
+    alternateLabel: { type: String, default: "" },
   },
   data() {
     return {
@@ -56,6 +56,7 @@ export default defineNuxtComponent({
             Home
           </NuxtLink>
           <NuxtLink
+            v-if="alternateHref && alternateLabel"
             :to="alternateHref"
             class="nav-link text-base font-medium"
           >

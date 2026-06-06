@@ -1,84 +1,98 @@
 import type {
   BrandProfile,
-  Environment,
-  EnvironmentKind,
+  ProfileBadgeKind,
   SidebarNavItem,
   Workspace,
 } from "~/types/app-shell";
 
 const SIDEBAR_NAV: SidebarNavItem[] = [
   { label: "Overview", to: "/app", icon: "overview" },
-  { label: "Performance", to: "/app/performance", icon: "chart" },
-  { label: "Creatives", to: "/app/creatives", icon: "image" },
+  { label: "Dashboards", to: "/app/dashboards", icon: "dashboards" },
+  { label: "Insights", to: "/app/insights", icon: "insights" },
+  { label: "Simulation", to: "/app/simulation", icon: "simulation" },
   { label: "Evolve", to: "/app/evolve", icon: "evolve" },
-  { label: "Audience", to: "/app/audience", icon: "users" },
+  {
+    label: "Assets",
+    to: "/app/assets/creative",
+    icon: "assets",
+    children: [
+      { label: "Creative", to: "/app/assets/creative", icon: "image" },
+      { label: "Audience", to: "/app/assets/audience", icon: "users" },
+      { label: "Variants", to: "/app/assets/variants", icon: "image" },
+      { label: "Datasources", to: "/app/assets/datasources", icon: "plug" },
+      { label: "Budgets", to: "/app/assets/budgets", icon: "wallet" },
+    ],
+  },
   { label: "Spend", to: "/app/spend", icon: "wallet" },
-  { label: "CRM / Outcomes", to: "/app/crm", icon: "link" },
-  { label: "Lab", to: "/app/lab", icon: "flask" },
-  { label: "Alerts", to: "/app/alerts", icon: "bell" },
   { label: "Connections", to: "/app/connections", icon: "plug" },
   { label: "Settings", to: "/app/settings", icon: "settings" },
 ];
 
 export function useWorkspaceContext() {
   const workspaces = useState<Workspace[]>("sv-workspaces", () => []);
-  const brands = useState<BrandProfile[]>("sv-brands", () => []);
-  const environments = useState<Environment[]>("sv-environments", () => []);
+  const brandProfiles = useState<BrandProfile[]>("sv-brand-profiles", () => []);
 
   const currentWorkspaceId = useState<string>("sv-current-workspace", () => "");
-  const currentBrandId = useState<string>("sv-current-brand", () => "");
-  const currentEnvironmentId = useState<string>("sv-current-env", () => "");
+  const currentBrandProfileId = useState<string>("sv-current-brand-profile", () => "");
 
   const sidebarCollapsed = useState<boolean>("sv-sidebar-collapsed", () => false);
   const mobileNavOpen = useState<boolean>("sv-mobile-nav-open", () => false);
 
   const currentWorkspace = computed(() =>
-    workspaces.value.find((w) => w.id === currentWorkspaceId.value) ?? workspaces.value[0],
+    workspaces.value.find((w) => w.id === currentWorkspaceId.value) || workspaces.value[0],
   );
 
-  const currentBrand = computed(() =>
-    brands.value.find((b) => b.id === currentBrandId.value) ?? brands.value[0],
+  const currentBrandProfile = computed(
+    () =>
+      brandProfiles.value.find((b) => b.id === currentBrandProfileId.value) ||
+      brandProfiles.value[0],
   );
 
-  const currentEnvironment = computed(() =>
-    environments.value.find((e) => e.id === currentEnvironmentId.value) ??
-      environments.value[0],
-  );
-
+  /** Playground demo mode when the active brand profile is the system Playground row. */
   const isPlayground = computed(
-    () => currentEnvironment.value?.kind === "playground",
+    () => currentBrandProfile.value?.isPlaygroundSystem === true,
   );
 
-  const brandsForWorkspace = computed(() =>
-    brands.value.filter((b) => b.workspaceId === currentWorkspaceId.value),
+  const profileBadgeKind = computed<ProfileBadgeKind>(() =>
+    currentBrandProfile.value?.isPlaygroundSystem ? "playground" : "production",
   );
 
-  const environmentsForBrand = computed(() =>
-    environments.value.filter((e) => e.brandProfileId === currentBrandId.value),
+  const brandProfilesForWorkspace = computed(() =>
+    brandProfiles.value.filter((b) => b.workspaceId === currentWorkspaceId.value),
   );
+
+  const WS_STORAGE_KEY = "sv-last-workspace-id";
+  const BP_STORAGE_KEY = "sv-last-brand-profile-id";
+
+  function persistSelection() {
+    if (typeof localStorage === "undefined") return;
+    if (currentWorkspaceId.value) localStorage.setItem(WS_STORAGE_KEY, currentWorkspaceId.value);
+    if (currentBrandProfileId.value) localStorage.setItem(BP_STORAGE_KEY, currentBrandProfileId.value);
+  }
 
   function setWorkspace(id: string) {
     currentWorkspaceId.value = id;
-    const firstBrand = brands.value.find((b) => b.workspaceId === id);
-    if (firstBrand) currentBrandId.value = firstBrand.id;
-    const firstEnv = environments.value.find((e) => e.brandProfileId === currentBrandId.value);
-    if (firstEnv) currentEnvironmentId.value = firstEnv.id;
+    const first = brandProfiles.value.find((b) => b.workspaceId === id);
+    if (first) currentBrandProfileId.value = first.id;
+    persistSelection();
   }
 
-  function setBrand(id: string) {
-    currentBrandId.value = id;
-    const firstEnv = environments.value.find((e) => e.brandProfileId === id);
-    if (firstEnv) currentEnvironmentId.value = firstEnv.id;
+  function setBrandProfile(id: string) {
+    currentBrandProfileId.value = id;
+    persistSelection();
   }
 
-  function setEnvironment(id: string) {
-    currentEnvironmentId.value = id;
-  }
-
-  function setEnvironmentKind(kind: EnvironmentKind) {
-    const list = environmentsForBrand.value;
-    const match = list.find((e) => e.kind === kind);
-    if (match) currentEnvironmentId.value = match.id;
+  /** Read the last selected IDs from localStorage and apply them if still valid. */
+  function restorePersistedSelection() {
+    if (typeof localStorage === "undefined") return;
+    const savedWs = localStorage.getItem(WS_STORAGE_KEY);
+    const savedBp = localStorage.getItem(BP_STORAGE_KEY);
+    if (savedWs && workspaces.value.some((w) => w.id === savedWs)) {
+      currentWorkspaceId.value = savedWs;
+    }
+    if (savedBp && brandProfiles.value.some((b) => b.id === savedBp)) {
+      currentBrandProfileId.value = savedBp;
+    }
   }
 
   function toggleSidebar() {
@@ -96,23 +110,19 @@ export function useWorkspaceContext() {
   return {
     sidebarNav: SIDEBAR_NAV,
     workspaces,
-    brands,
-    environments,
+    brandProfiles,
     currentWorkspaceId,
-    currentBrandId,
-    currentEnvironmentId,
+    currentBrandProfileId,
     currentWorkspace,
-    currentBrand,
-    currentEnvironment,
+    currentBrandProfile,
     isPlayground,
-    brandsForWorkspace,
-    environmentsForBrand,
+    profileBadgeKind,
+    brandProfilesForWorkspace,
     sidebarCollapsed,
     mobileNavOpen,
     setWorkspace,
-    setBrand,
-    setEnvironment,
-    setEnvironmentKind,
+    setBrandProfile,
+    restorePersistedSelection,
     toggleSidebar,
     toggleMobileNav,
     closeMobileNav,

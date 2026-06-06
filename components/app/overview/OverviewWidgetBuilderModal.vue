@@ -38,7 +38,7 @@ const title = ref("");
 const description = ref("");
 
 const sourceConfig = computed(() =>
-  OVERVIEW_WIDGET_SOURCE_OPTIONS.find((option) => option.id === source.value) ?? OVERVIEW_WIDGET_SOURCE_OPTIONS[0]!,
+  OVERVIEW_WIDGET_SOURCE_OPTIONS.find((option) => option.id === source.value) || OVERVIEW_WIDGET_SOURCE_OPTIONS[0]!,
 );
 
 const metricOptions = computed(() => sourceConfig.value.metrics);

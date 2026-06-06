@@ -1,3 +1,6 @@
-export default defineNuxtPlugin(() => {
-  useAuth().restoreSession();
+export default defineNuxtPlugin({
+  enforce: "pre",
+  async setup() {
+    await useAuth().initializeSession();
+  },
 });

@@ -85,7 +85,7 @@ const centerDisplay = computed(() => props.centerValue || formatCompactTotal(tot
         </div>
         <div class="shrink-0 text-right">
           <div class="text-[12px] font-semibold tabular-nums text-black sm:text-[13px]">{{ segmentShare(segment.value) }}</div>
-          <div class="text-[11px] tabular-nums text-black/45">{{ segment.detail ?? segment.value }}</div>
+          <div class="text-[11px] tabular-nums text-black/45">{{ segment.detail || segment.value }}</div>
         </div>
       </div>
     </div>

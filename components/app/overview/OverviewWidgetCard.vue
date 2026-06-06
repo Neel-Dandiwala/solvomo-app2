@@ -53,7 +53,7 @@ const sizeClass = computed(() => {
 });
 
 const showDetailToggle = computed(
-  () => props.payload?.kind === "table" && (props.payload.rows?.length ?? 0) > 5,
+  () => props.payload?.kind === "table" && (props.payload.rows?.length || 0) > 5,
 );
 
 defineEmits<{
@@ -63,8 +63,8 @@ defineEmits<{
 
 <template>
   <SurfaceCard
-    :variant="variant ?? 'frame'"
-    :padding="padding ?? (compact ? 'sm' : 'md')"
+    :variant="variant || 'frame'"
+    :padding="padding || (compact ? 'sm' : 'md')"
     class="group h-full min-w-0 max-w-full overflow-hidden"
     :class="sizeClass"
   >

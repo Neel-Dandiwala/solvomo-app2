@@ -9,7 +9,7 @@ export const demoAlertsFallback: AlertItem[] = [
     severity: "medium",
     status: "open",
     source: "Shopify · Revenue",
-    createdAt: "2026-04-09 · 08:12",
+    created_at: "2026-04-09 · 08:12",
   },
   {
     id: "demo-al-2",
@@ -18,7 +18,7 @@ export const demoAlertsFallback: AlertItem[] = [
     severity: "high",
     status: "investigating",
     source: "Meta Ads · Prospecting",
-    createdAt: "2026-04-08 · 16:40",
+    created_at: "2026-04-08 · 16:40",
   },
   {
     id: "demo-al-3",
@@ -27,7 +27,7 @@ export const demoAlertsFallback: AlertItem[] = [
     severity: "low",
     status: "resolved",
     source: "Salesforce · CRM",
-    createdAt: "2026-04-07 · 09:05",
+    created_at: "2026-04-07 · 09:05",
   },
   {
     id: "demo-al-4",
@@ -36,7 +36,7 @@ export const demoAlertsFallback: AlertItem[] = [
     severity: "critical",
     status: "open",
     source: "Google Ads · Conversions",
-    createdAt: "2026-04-06 · 22:18",
+    created_at: "2026-04-06 · 22:18",
   },
   {
     id: "demo-al-5",
@@ -45,6 +45,6 @@ export const demoAlertsFallback: AlertItem[] = [
     severity: "medium",
     status: "muted",
     source: "Meta Ads · Audiences",
-    createdAt: "2026-04-05 · 11:02",
+    created_at: "2026-04-05 · 11:02",
   },
 ];

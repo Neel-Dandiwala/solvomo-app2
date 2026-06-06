@@ -1,248 +1,303 @@
-import type { OnboardingStepKey, SolvomoUserId } from "~/types/mock";
-import { getMockBundle, MOCK_USERS, validateDemoCredentials } from "~/data/mock-solvomo";
-
-const STORAGE_KEY = "sv-auth-session";
+import type { BrandProfile, Workspace } from "~/types/app-shell";
+import type { OnboardingStepKey } from "~/types/mock";
+import {
+  isOnboardingCompleteForSteps,
+  nextOnboardingPathForSteps,
+} from "~/utils/onboardingFlow";
+import { readRouteResponse } from "~/utils/routeResponse";
 
 export interface AuthSession {
-  userId: SolvomoUserId;
+  userId: string;
   email: string;
-  /** Optional override when signing up with a custom name. */
   name?: string;
   onboardingSteps: OnboardingStepKey[];
 }
 
-function profileNameForUser(userId: SolvomoUserId): string {
-  return MOCK_USERS[userId]?.profile.name ?? "";
-}
+type AuthHydrationStatus = "idle" | "restoring" | "ready" | "error";
 
-/** Session name must be a string; legacy / bad localStorage can store non-strings. */
-function normalizeSessionName(parsed: AuthSession): void {
-  const n = parsed.name as unknown;
-  if (n == null || n === "") return;
-  if (typeof n === "string") {
-    parsed.name = n.trim() || undefined;
-    return;
-  }
-  parsed.name = undefined;
-}
+type ApiUser = {
+  _id?: string;
+  email?: string;
+  name?: string;
+  onboarding_steps?: string[];
+};
 
-function resolveDisplayName(s: AuthSession | null): string {
-  if (!s) return "";
-  const fromProfile = profileNameForUser(s.userId);
-  const raw = s.name;
-  if (raw == null || raw === "") return fromProfile;
-  if (typeof raw === "string") return raw.trim() || fromProfile;
-  return fromProfile;
-}
+type ApiAuthContext = {
+  user?: ApiUser | null;
+  workspaces: Workspace[];
+  brandProfiles: Array<
+    Omit<
+      Partial<BrandProfile>,
+      "id" | "workspaceId" | "currency" | "attributionPreference"
+    > & {
+      id: string;
+      name?: string;
+      workspace_id?: string;
+      workspaceId?: string;
+      currency?: string;
+      attribution_preference?: string;
+      attributionPreference?: string;
+      is_playground_system?: boolean;
+      isPlaygroundSystem?: boolean;
+    }
+  >;
+};
 
-function defaultStepsForUser(userId: SolvomoUserId): OnboardingStepKey[] {
-  return [...getMockBundle(userId).onboardingDefaults];
-}
+let authInitPromise: Promise<void> | null = null;
 
-export function hydrateWorkspaceFromMock(userId: SolvomoUserId) {
-  const bundle = getMockBundle(userId);
+function normalizeApiBrandProfile(
+  profile: ApiAuthContext["brandProfiles"][number],
+): BrandProfile {
   const {
-    workspaces,
-    brands,
-    environments,
-    currentWorkspaceId,
-    currentBrandId,
-    currentEnvironmentId,
-  } = useWorkspaceContext();
+    workspace_id,
+    attribution_preference,
+    is_playground_system,
+    ...rest
+  } = profile;
 
-  workspaces.value = [...bundle.workspaces];
-  brands.value = [...bundle.brands];
-  environments.value = [...bundle.environments];
+  return {
+    ...rest,
+    id: profile.id,
+    name: profile.name || "Untitled brand",
+    workspaceId: profile.workspaceId || workspace_id || "",
+    currency: profile.currency || "USD",
+    attributionPreference:
+      profile.attributionPreference || attribution_preference || "Multi-touch",
+    isPlaygroundSystem:
+      profile.isPlaygroundSystem ?? is_playground_system ?? false,
+  };
+}
 
-  currentWorkspaceId.value = bundle.workspaces[0]?.id ?? "";
-  currentBrandId.value = bundle.brands[0]?.id ?? "";
-  const prod =
-    bundle.environments.find(
-      (e) => e.brandProfileId === currentBrandId.value && e.kind === "production",
-    ) ?? bundle.environments[0];
-  currentEnvironmentId.value = prod?.id ?? "";
+function clearWorkspaceContext() {
+  const workspace = useWorkspaceContext();
+  workspace.workspaces.value = [];
+  workspace.brandProfiles.value = [];
+  workspace.currentWorkspaceId.value = "";
+  workspace.currentBrandProfileId.value = "";
+}
+
+function apiBase(): string {
+  const config = useRuntimeConfig();
+  return String(config.public.apiBase || "").trim().replace(/\/$/, "");
+}
+
+async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> {
+  const base = apiBase();
+  if (!base) throw new Error("api-base-missing");
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const res = await fetch(`${base}${normalized}`, {
+    ...init,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers || {}),
+    },
+  });
+  return readRouteResponse<T>(res);
+}
+
+export async function hydrateWorkspaceFromApi(ctx?: ApiAuthContext): Promise<void> {
+  const context = ctx ?? await fetchApi<ApiAuthContext>("/auth/context");
+  const workspace = useWorkspaceContext();
+
+  workspace.workspaces.value = [...context.workspaces];
+  workspace.brandProfiles.value = context.brandProfiles.map(normalizeApiBrandProfile);
+
+  // First, set defaults (first workspace, first non-playground brand)
+  const ws0 = context.workspaces[0]?.id || "";
+  workspace.currentWorkspaceId.value = ws0;
+  const profilesInWs = workspace.brandProfiles.value.filter(
+    (brand) => brand.workspaceId === ws0,
+  );
+  const brand0 =
+    profilesInWs.find((brand) => !brand.isPlaygroundSystem) ||
+    profilesInWs[0] ||
+    workspace.brandProfiles.value[0];
+  workspace.currentBrandProfileId.value = brand0?.id || "";
+
+  // Then restore previously selected IDs from localStorage (overrides defaults if still valid)
+  workspace.restorePersistedSelection();
 }
 
 export function useAuth() {
   const session = useState<AuthSession | null>("sv-auth-session", () => null);
-  const restored = useState<boolean>("sv-auth-restored", () => false);
+  const hydrationStatus = useState<AuthHydrationStatus>(
+    "sv-auth-hydration-status",
+    () => "idle",
+  );
   const onboardingDraft = useOnboardingDraft();
   const workspace = useWorkspaceContext();
 
   const isAuthenticated = computed(() => session.value !== null);
-
-  const activeUserId = computed(() => session.value?.userId ?? null);
-
-  const displayName = computed(() => resolveDisplayName(session.value));
-
-  const displayEmail = computed(() => session.value?.email ?? "");
-
-  const onboardingStepsDone = computed(() => session.value?.onboardingSteps ?? []);
+  const activeUserId = computed(() => session.value?.userId || null);
+  const displayName = computed(
+    () => session.value?.name || session.value?.email.split("@")[0] || "",
+  );
+  const displayEmail = computed(() => session.value?.email || "");
+  const onboardingStepsDone = computed(() => session.value?.onboardingSteps || []);
+  const isHydrated = computed(() => hydrationStatus.value === "ready");
 
   const isOnboardingComplete = computed(() => {
     if (!session.value) return false;
-    const need: OnboardingStepKey[] = ["survey", "brand", "connections"];
-    return need.every((s) => session.value!.onboardingSteps.includes(s));
+    return isOnboardingCompleteForSteps(session.value.onboardingSteps);
   });
 
-  function ensureHydrated() {
-    if (!session.value) return;
-
+  function ensureWorkspaceSelection() {
     const hasWorkspaceState =
       workspace.workspaces.value.length > 0 &&
-      workspace.brands.value.length > 0 &&
-      workspace.environments.value.length > 0;
+      workspace.brandProfiles.value.length > 0;
 
-    if (!hasWorkspaceState) {
-      hydrateWorkspaceFromMock(session.value.userId);
-      return;
-    }
+    if (!hasWorkspaceState) return;
 
     if (!workspace.currentWorkspaceId.value) {
-      workspace.currentWorkspaceId.value = workspace.workspaces.value[0]?.id ?? "";
+      workspace.currentWorkspaceId.value = workspace.workspaces.value[0]?.id || "";
     }
 
-    if (!workspace.currentBrandId.value) {
-      const firstBrand =
-        workspace.brands.value.find((brand) => brand.workspaceId === workspace.currentWorkspaceId.value) ??
-        workspace.brands.value[0];
-      workspace.currentBrandId.value = firstBrand?.id ?? "";
-    }
-
-    if (!workspace.currentEnvironmentId.value) {
-      const productionForBrand =
-        workspace.environments.value.find(
-          (env) => env.brandProfileId === workspace.currentBrandId.value && env.kind === "production",
-        ) ??
-        workspace.environments.value.find((env) => env.brandProfileId === workspace.currentBrandId.value) ??
-        workspace.environments.value[0];
-      workspace.currentEnvironmentId.value = productionForBrand?.id ?? "";
+    if (!workspace.currentBrandProfileId.value) {
+      const first =
+        workspace.brandProfiles.value.find(
+          (brand) => brand.workspaceId === workspace.currentWorkspaceId.value,
+        ) || workspace.brandProfiles.value[0];
+      workspace.currentBrandProfileId.value = first?.id || "";
     }
   }
 
-  function persist() {
-    if (!import.meta.client || !session.value) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(session.value));
-  }
-
-  function restoreSession() {
-    if (!import.meta.client) return;
-    if (restored.value) {
-      ensureHydrated();
+  async function initializeSession() {
+    if (authInitPromise) {
+      await authInitPromise;
       return;
     }
-    restored.value = true;
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      ensureHydrated();
-      return;
-    }
-    try {
-      const parsed = JSON.parse(raw) as AuthSession;
-      if (!parsed.userId || !MOCK_USERS[parsed.userId]) return;
-      if (!Array.isArray(parsed.onboardingSteps)) parsed.onboardingSteps = [];
-      normalizeSessionName(parsed);
-      session.value = parsed;
-      persist();
-      ensureHydrated();
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  }
 
-  function loginWithUserId(userId: SolvomoUserId, email: string, nameOverride?: string) {
-    let prevSteps: OnboardingStepKey[] = [];
-    if (import.meta.client) {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        try {
-          const p = JSON.parse(raw) as AuthSession;
-          if (p.userId === userId && Array.isArray(p.onboardingSteps)) prevSteps = p.onboardingSteps;
-        } catch {
-          /* ignore */
+    authInitPromise = (async () => {
+      try {
+        hydrationStatus.value = "restoring";
+        const body = await fetchApi<ApiAuthContext>("/auth/session");
+        const user = body.user;
+        if (!user?._id || !user.email) {
+          throw new Error("invalid-user");
         }
+        const steps = (Array.isArray(user.onboarding_steps)
+          ? user.onboarding_steps
+          : []
+        ).filter((step): step is OnboardingStepKey =>
+          step === "survey" || step === "brand",
+        );
+
+        session.value = {
+          userId: String(user._id),
+          email: user.email,
+          name:
+            typeof user.name === "string" && user.name.trim()
+              ? user.name.trim()
+              : undefined,
+          onboardingSteps: steps,
+        };
+        await hydrateWorkspaceFromApi(body);
+        ensureWorkspaceSelection();
+        hydrationStatus.value = "ready";
+      } catch {
+        session.value = null;
+        clearWorkspaceContext();
+        hydrationStatus.value = "ready";
+      } finally {
+        authInitPromise = null;
       }
-    }
-    const base = defaultStepsForUser(userId);
-    const merged = new Set<OnboardingStepKey>([...base, ...prevSteps]);
-    session.value = {
-      userId,
-      email,
-      name: typeof nameOverride === "string" ? nameOverride.trim() || undefined : undefined,
-      onboardingSteps: [...merged],
-    };
-    hydrateWorkspaceFromMock(userId);
-    onboardingDraft.resetDraft();
-    persist();
+    })();
+
+    await authInitPromise;
   }
 
-  const DEMO_AUTH_ERROR = "Try again.";
-
-  function login(email: string, password: string): { ok: true } | { ok: false; message: string } {
-    const id = validateDemoCredentials(email, password);
-    if (!id) {
-      return { ok: false, message: DEMO_AUTH_ERROR };
+  async function login(
+    email: string,
+    password: string,
+  ): Promise<{ ok: true } | { ok: false; message: string }> {
+    try {
+      const data = await fetchApi<{ mfaRequired?: boolean }>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+      if (data.mfaRequired) {
+        return {
+          ok: false,
+          message: "MFA is enabled for this account; use API-only flow.",
+        };
+      }
+      await initializeSession();
+      return { ok: true };
+    } catch {
+      return { ok: false, message: "Try again." };
     }
-    loginWithUserId(id, email.trim().toLowerCase());
-    return { ok: true };
   }
 
-  function signup(payload: { email: string; password: string; name: string }): { ok: true } | { ok: false; message: string } {
-    const id = validateDemoCredentials(payload.email, payload.password);
-    if (!id) {
-      return { ok: false, message: DEMO_AUTH_ERROR };
+  async function signup(payload: {
+    email: string;
+    password: string;
+    name: string;
+  }): Promise<{ ok: true } | { ok: false; message: string }> {
+    try {
+      await fetchApi<{ ok: true }>("/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+          email: payload.email.trim().toLowerCase(),
+          password: payload.password,
+          name: payload.name.trim() || undefined,
+        }),
+      });
+      return login(payload.email, payload.password);
+    } catch {
+      return { ok: false, message: "Try again." };
     }
-    const email = payload.email.trim().toLowerCase();
-    session.value = {
-      userId: id,
-      email: email || MOCK_USERS[id].profile.email,
-      name: payload.name.trim() || undefined,
-      onboardingSteps: [],
-    };
-    hydrateWorkspaceFromMock(id);
-    onboardingDraft.resetDraft();
-    persist();
-    return { ok: true };
   }
 
-  function logout() {
+  async function logout() {
+    try {
+      await fetchApi<{ ok: true }>("/auth/logout", { method: "POST" });
+    } catch {
+      /* Local cleanup still happens if the network is unavailable. */
+    }
     session.value = null;
+    clearWorkspaceContext();
     onboardingDraft.resetDraft();
-    if (import.meta.client) localStorage.removeItem(STORAGE_KEY);
+    hydrationStatus.value = "ready";
+    await navigateTo("/");
   }
 
   function completeOnboardingStep(step: OnboardingStepKey) {
     if (!session.value) return;
     if (!session.value.onboardingSteps.includes(step)) {
       session.value.onboardingSteps.push(step);
-      persist();
     }
+    void fetchApi<{ ok: true; onboarding_steps: string[] }>(
+      "/auth/onboarding/complete-step",
+      {
+        method: "POST",
+        body: JSON.stringify({ step }),
+      },
+    ).catch(() => {});
   }
 
   function nextOnboardingPath(): string {
-    if (!session.value) return "/login";
-    const done = session.value.onboardingSteps;
-    if (!done.includes("survey")) return "/onboarding/survey";
-    if (!done.includes("brand")) return "/onboarding/brand-setup";
-    if (!done.includes("connections")) return "/onboarding/connections";
-    return "/app";
+    if (!session.value) return "/";
+    return nextOnboardingPathForSteps(session.value.onboardingSteps);
   }
 
   return {
     session,
+    hydrationStatus,
+    isHydrated,
     isAuthenticated,
     activeUserId,
     displayName,
     displayEmail,
     onboardingStepsDone,
     isOnboardingComplete,
-    ensureHydrated,
-    restoreSession,
+    ensureHydrated: initializeSession,
+    restoreSession: initializeSession,
+    initializeSession,
     login,
     signup,
     logout,
     completeOnboardingStep,
     nextOnboardingPath,
-    persist,
   };
 }

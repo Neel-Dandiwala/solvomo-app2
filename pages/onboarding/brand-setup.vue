@@ -1,117 +1,228 @@
 <script setup lang="ts">
+import {
+  ONBOARDING_ROUTE_BY_STEP,
+  nextOnboardingPathForSteps,
+} from "~/utils/onboardingFlow";
+
 definePageMeta({ layout: "onboarding" });
 
 useHead({ title: "Onboarding — Brand profile | Solvomo" });
 
 const auth = useAuth();
-const { currentWorkspace, currentBrand, brandsForWorkspace, brands } = useWorkspaceContext();
-const { draft, restoreDraft } = useOnboardingDraft();
+const {
+  currentWorkspace,
+  currentBrandProfile,
+  brandProfilesForWorkspace,
+  brandProfiles,
+  workspaces,
+  currentWorkspaceId,
+} = useWorkspaceContext();
+const { draft, restoreDraft, resetDraft } = useOnboardingDraft();
 
 restoreDraft();
 
+const socialPlatformOptions = [
+  { value: "instagram", label: "Instagram" },
+  { value: "facebook", label: "Facebook page" },
+  { value: "tiktok", label: "TikTok" },
+  { value: "linkedin", label: "LinkedIn" },
+  { value: "youtube", label: "YouTube" },
+  { value: "x", label: "X / Twitter" },
+  { value: "pinterest", label: "Pinterest" },
+  { value: "other", label: "Other" },
+] as const;
+
 watchEffect(() => {
-  if (!draft.value.brandName && currentBrand.value?.name) draft.value.brandName = currentBrand.value.name;
-  if (!draft.value.currency && currentBrand.value?.currency) draft.value.currency = currentBrand.value.currency;
-  if (!draft.value.attribution && currentBrand.value?.attributionPreference) {
-    draft.value.attribution = currentBrand.value.attributionPreference;
+  if (!draft.value.workspaceName?.trim() && currentWorkspace.value?.name) {
+    draft.value.workspaceName = currentWorkspace.value.name;
+  }
+  if (!draft.value.brandName && currentBrandProfile.value?.name) {
+    draft.value.brandName = currentBrandProfile.value.name;
+  }
+  if (!draft.value.currency && currentBrandProfile.value?.currency) {
+    draft.value.currency = currentBrandProfile.value.currency;
   }
 });
 
-async function goToConnections() {
-  const brandId = currentBrand.value?.id;
-  if (brandId) {
-    const idx = brands.value.findIndex((brand: (typeof brands.value)[number]) => brand.id === brandId);
+function addSocialHandle() {
+  draft.value.socialHandles.push({
+    platform: "instagram",
+    handle: "",
+    profileUrl: "",
+  });
+}
+
+function removeSocialHandle(index: number) {
+  draft.value.socialHandles.splice(index, 1);
+}
+
+async function finishOnboarding() {
+  const wsId = currentWorkspaceId.value;
+  if (wsId) {
+    const widx = workspaces.value.findIndex((w) => w.id === wsId);
+    if (widx !== -1) {
+      const wname = draft.value.workspaceName?.trim();
+      if (wname) {
+        workspaces.value[widx] = { ...workspaces.value[widx]!, name: wname };
+      }
+    }
+  }
+
+  const bpId = currentBrandProfile.value?.id;
+  if (bpId) {
+    const idx = brandProfiles.value.findIndex((bp: (typeof brandProfiles.value)[number]) => bp.id === bpId);
     if (idx !== -1) {
-      brands.value[idx] = {
-        ...brands.value[idx]!,
-        name: draft.value.brandName || brands.value[idx]!.name,
-        currency: draft.value.currency || brands.value[idx]!.currency,
-        attributionPreference: draft.value.attribution || brands.value[idx]!.attributionPreference,
+      brandProfiles.value[idx] = {
+        ...brandProfiles.value[idx]!,
+        name: draft.value.brandName || brandProfiles.value[idx]!.name,
+        currency: draft.value.currency || brandProfiles.value[idx]!.currency,
+        socialHandles: draft.value.socialHandles
+          .map((row) => ({
+            platform: row.platform.trim(),
+            handle: row.handle.trim(),
+            profileUrl: row.profileUrl.trim() || undefined,
+          }))
+          .filter((row) => row.platform && (row.handle || row.profileUrl)),
       };
     }
   }
   auth.completeOnboardingStep("brand");
-  await navigateTo("/onboarding/connections");
+  resetDraft();
+  await navigateTo(nextOnboardingPathForSteps([
+    ...auth.onboardingStepsDone.value,
+    "brand",
+  ]));
 }
 </script>
 
 <template>
   <div>
     <OnboardingHero
-      eyebrow="Brand setup"
-      title="Scope your brand profile inside the workspace"
-      :description="`Workspace (${currentWorkspace?.name}) holds members, billing, and API access. Brand profiles remain independently scoped so campaigns, creatives, and insights never mix across brands.`"
-    >
-      <template #aside>
-        <p class="text-xs font-bold uppercase tracking-wide text-black/45">
-          This step defines
-        </p>
-        <ul class="mt-3 space-y-2 text-sm text-black/60">
-          <li>Brand naming across selectors and pages</li>
-          <li>Reporting currency for this profile only</li>
-          <li>Attribution assumptions for modeled views</li>
-        </ul>
-      </template>
-    </OnboardingHero>
+      title="Name your workspace and brand"
+      description="Add the public social or ad profiles we should use to enrich simulations."
+    />
 
     <SurfaceCard variant="product" class="mt-8" padding="lg">
-      <div class="grid gap-8 lg:grid-cols-2">
-        <div>
-          <h2 class="text-base font-semibold">Workspace context</h2>
-          <p class="mt-2 text-sm text-black/50">
-            You’re configuring defaults for this workspace only. Invite teammates from Settings after onboarding.
+      <div class="grid gap-10 lg:grid-cols-2">
+        <div class="space-y-6">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wide text-black/45">Workspace name</label>
+            <input
+              v-model="draft.workspaceName"
+              class="auth-input mt-2"
+              type="text"
+              autocomplete="organization"
+              placeholder="e.g. Acme Marketing"
+            />
+          </div>
+          <p class="text-sm text-black/50">
+            {{ brandProfilesForWorkspace.length }} brand profile{{
+              brandProfilesForWorkspace.length === 1 ? "" : "s"
+            }}
+            in this workspace.
           </p>
-          <ul class="mt-4 space-y-2 text-sm text-black/65">
-            <li class="flex gap-2">
-              <span class="text-[var(--sv-product-end)]">●</span>
-              Workspace: <span class="font-semibold text-black">{{ currentWorkspace?.name }}</span>
-            </li>
-            <li class="flex gap-2">
-              <span class="text-[var(--sv-product-end)]">●</span>
-              Brand profiles in this workspace: {{ brandsForWorkspace.length }}
-            </li>
-          </ul>
         </div>
-        <div class="surface-soft rounded-2xl p-5">
-          <h2 class="text-base font-semibold">Brand profile defaults</h2>
-          <p class="mt-2 text-sm text-black/50">
-            These labels appear in selectors and empty states across the product.
+
+        <div class="surface-soft rounded-2xl p-6">
+          <h2 class="text-base font-semibold">Brand profile</h2>
+          <p class="mt-1 text-sm text-black/45">
+            Currency and social handles apply to this brand only.
           </p>
-          <label class="mt-5 block text-xs font-bold uppercase tracking-wide text-black/45">Display name</label>
+          <label class="mt-6 block text-xs font-bold uppercase tracking-wide text-black/45">Brand name</label>
           <input v-model="draft.brandName" class="auth-input mt-2" type="text" autocomplete="organization" />
-          <label class="mt-4 block text-xs font-bold uppercase tracking-wide text-black/45">Reporting currency</label>
+          <label class="mt-5 block text-xs font-bold uppercase tracking-wide text-black/45">Currency</label>
           <select v-model="draft.currency" class="auth-input mt-2">
             <option value="USD">USD</option>
             <option value="EUR">EUR</option>
             <option value="GBP">GBP</option>
           </select>
-          <label class="mt-4 block text-xs font-bold uppercase tracking-wide text-black/45">Attribution preference</label>
-          <select v-model="draft.attribution" class="auth-input mt-2">
-            <option disabled value="">
-              Select a model
-            </option>
-            <option value="Multi-touch, last non-direct">
-              Multi-touch, last non-direct
-            </option>
-            <option value="First touch">
-              First touch
-            </option>
-            <option value="Last click">
-              Last click
-            </option>
-          </select>
+          <div class="mt-6">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wide text-black/45">
+                  Social/ad handles
+                </p>
+                <p class="mt-1 text-xs text-black/45">
+                  Add profiles where this brand runs organic content or ads.
+                </p>
+              </div>
+              <button
+                type="button"
+                class="button-secondary rounded-xl px-3 py-2 text-xs font-semibold"
+                @click="addSocialHandle"
+              >
+                Add handle
+              </button>
+            </div>
+
+            <div v-if="draft.socialHandles.length" class="mt-4 space-y-4">
+              <div
+                v-for="(row, index) in draft.socialHandles"
+                :key="index"
+                class="rounded-2xl border border-black/8 bg-white/70 p-4"
+              >
+                <div class="grid gap-3 sm:grid-cols-[0.8fr_1fr]">
+                  <label class="block">
+                    <span class="text-xs font-bold uppercase tracking-wide text-black/45">Platform</span>
+                    <select v-model="row.platform" class="auth-input mt-2">
+                      <option
+                        v-for="opt in socialPlatformOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                      >
+                        {{ opt.label }}
+                      </option>
+                    </select>
+                  </label>
+                  <label class="block">
+                    <span class="text-xs font-bold uppercase tracking-wide text-black/45">Handle</span>
+                    <input
+                      v-model="row.handle"
+                      class="auth-input mt-2"
+                      type="text"
+                      placeholder="@brand"
+                    >
+                  </label>
+                </div>
+                <label class="mt-3 block">
+                  <span class="text-xs font-bold uppercase tracking-wide text-black/45">Preferred profile link</span>
+                  <input
+                    v-model="row.profileUrl"
+                    class="auth-input mt-2"
+                    type="url"
+                    placeholder="https://www.instagram.com/brand"
+                  >
+                </label>
+                <button
+                  type="button"
+                  class="mt-3 text-xs font-semibold text-black/45 hover:text-black"
+                  @click="removeSocialHandle(index)"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+            <button
+              v-else
+              type="button"
+              class="mt-4 w-full rounded-2xl border border-dashed border-black/12 px-4 py-5 text-sm font-semibold text-black/55 hover:border-black/20 hover:text-black"
+              @click="addSocialHandle"
+            >
+              Add Instagram, Facebook, TikTok, LinkedIn, or another profile
+            </button>
+          </div>
         </div>
       </div>
-      <div class="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-black/8 pt-6">
-        <NuxtLink to="/onboarding/survey" class="nav-link inline-flex text-sm font-semibold">
-          Back to survey
+      <div class="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-black/8 pt-8">
+        <NuxtLink :to="ONBOARDING_ROUTE_BY_STEP.survey" class="nav-link inline-flex text-sm font-semibold">
+          Back
         </NuxtLink>
         <button
           type="button"
           class="button-primary rounded-xl px-5 py-2.5 text-sm font-semibold text-white"
-          @click="goToConnections"
+          @click="finishOnboarding"
         >
-          Continue to connections
+          Continue
         </button>
       </div>
     </SurfaceCard>

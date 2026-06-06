@@ -1,22 +1,22 @@
 <script setup lang="ts">
 defineProps<{
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
-  description: string;
+  description?: string;
 }>();
 </script>
 
 <template>
-  <section class="mb-8 grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
+  <section class="mb-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
     <div>
-      <p class="eyebrow rounded-full">
+      <p v-if="eyebrow" class="eyebrow rounded-full">
         <span class="eyebrow-dot" />
         {{ eyebrow }}
       </p>
-      <h1 class="mt-4 max-w-3xl text-2xl font-semibold tracking-tight sm:text-3xl">
+      <h1 class="max-w-3xl text-2xl font-semibold tracking-tight sm:text-3xl" :class="eyebrow ? 'mt-4' : ''">
         {{ title }}
       </h1>
-      <p class="mt-3 max-w-2xl text-sm leading-relaxed text-black/55 sm:text-[15px]">
+      <p v-if="description" class="mt-3 max-w-2xl text-sm leading-relaxed text-black/55 sm:text-[15px]">
         {{ description }}
       </p>
     </div>

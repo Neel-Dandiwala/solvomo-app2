@@ -11,9 +11,9 @@ const props = defineProps<{
   metadataTight?: boolean;
 }>();
 
-const { currentBrand, currentEnvironment } = useWorkspaceContext();
+const { currentBrandProfile, profileBadgeKind } = useWorkspaceContext();
 
-const contextLabel = computed(() => props.eyebrow ?? currentBrand.value?.name ?? "Solvomo");
+const contextLabel = computed(() => props.eyebrow || currentBrandProfile.value?.name || "Solvomo");
 </script>
 
 <template>
@@ -25,7 +25,7 @@ const contextLabel = computed(() => props.eyebrow ?? currentBrand.value?.name ??
             <span class="eyebrow-dot" />
             <span class="truncate">{{ contextLabel }}</span>
           </div>
-          <EnvironmentBadge v-if="currentEnvironment?.kind" :kind="currentEnvironment.kind" />
+          <EnvironmentBadge :kind="profileBadgeKind" />
         </div>
         <h1 class="sv-page-title" :class="props.dense ? 'mt-4' : 'mt-6'">
           {{ title }}

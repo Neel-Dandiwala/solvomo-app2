@@ -1,48 +1,81 @@
 <script setup lang="ts">
-useHead({ title: "Solvomo — Marketing decision intelligence" });
+useHead({ title: "Solvomo — Sign in" });
+
+const route = useRoute();
+const api = useApiClient();
+const { buildGoogleOAuthHref } = useGoogleAuth();
+
+const googleHref = computed(() => {
+  if (!api.hasBase.value) return null;
+  const next = (route.query.redirect as string) || "/app";
+  return buildGoogleOAuthHref(next);
+});
 </script>
 
 <template>
-  <div class="page-haze flex min-h-svh flex-col bg-white text-black antialiased">
-    <div class="hero-backdrop flex flex-1 flex-col border-b border-black/10">
-      <div
-        class="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-4 py-14 sm:px-6 lg:px-8 lg:py-20"
+  <AuthShell>
+    <template #aside>
+      <div class="eyebrow rounded-full">
+        <span class="eyebrow-dot" />
+        Decision workspace
+      </div>
+      <h1
+        class="mt-8 max-w-[min(100%,42rem)] text-[clamp(2.75rem,5.2vw,5.25rem)] font-semibold leading-[0.92] tracking-[-0.05em] text-black sm:text-[clamp(3.25rem,5.5vw,5.75rem)]"
       >
-        <div class="mx-auto w-full max-w-3xl text-center">
-          <div class="eyebrow mx-auto rounded-full">
-            <span class="eyebrow-dot" />
-            Solvomo
-          </div>
-          <h1
-            class="mt-8 text-[clamp(2.8rem,6vw,4.9rem)] font-semibold leading-[0.92] tracking-[-0.05em]"
-          >
-            Marketing
-            <span class="headline-brand"> decision intelligence</span>
-          </h1>
-          <p class="mt-6 text-lg leading-relaxed text-black/60 sm:text-xl">
-            A calm command center for growth teams — channel, creative, and outcomes in one disciplined workspace.
+        Welcome back
+        <span class="headline-brand block">to your growth workspace.</span>
+      </h1>
+      <p class="mt-8 max-w-2xl text-[1.125rem] leading-relaxed text-black/60 sm:text-[1.35rem]">
+        Continue with Google to review channel, creative, and outcome context in one focused workspace.
+      </p>
+      <p class="mt-4 max-w-2xl text-sm leading-relaxed text-black/45">
+        New workspaces are created automatically the first time an approved Google account signs in.
+      </p>
+      <div class="section-divider mt-12" />
+      <div class="mt-10 grid gap-5 sm:grid-cols-2">
+        <div class="surface-soft rounded-[18px] p-6 sm:p-7">
+          <p class="text-[12px] font-semibold uppercase tracking-[0.16em] text-black/42">
+            Executive view
           </p>
-          <p class="mt-4 text-sm leading-relaxed text-black/45">
-            Internal preview: sign in with
-            <span class="font-semibold text-black/55">neel@solvomo.co</span> (fully onboarded) or
-            <span class="font-semibold text-black/55">riya@solvomo.co</span> (guided setup). Any password works.
+          <p class="mt-3 text-[16px] leading-relaxed text-black/56 sm:text-[17px]">
+            Board-ready summaries and clear next moves.
           </p>
-          <div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <NuxtLink
-              to="/login"
-              class="button-primary relative isolate inline-flex min-w-[11rem] items-center justify-center rounded-[14px] px-8 py-4 text-base font-semibold transition-all duration-200"
-            >
-              <span class="relative z-10 text-white">Sign in</span>
-            </NuxtLink>
-            <NuxtLink
-              to="/signup"
-              class="button-secondary relative isolate inline-flex min-w-[11rem] items-center justify-center rounded-[14px] px-8 py-4 text-base font-semibold transition-colors duration-200"
-            >
-              <span class="relative z-10 text-black">Create account</span>
-            </NuxtLink>
-          </div>
+        </div>
+        <div class="surface-depth rounded-[18px] p-6 sm:p-7">
+          <p class="text-[12px] font-semibold uppercase tracking-[0.16em] text-black/42">
+            Operator workflow
+          </p>
+          <p class="mt-3 text-[16px] leading-relaxed text-black/56 sm:text-[17px]">
+            Plan, review, and reallocate with confidence.
+          </p>
         </div>
       </div>
-    </div>
-  </div>
+    </template>
+
+    <AuthFormCard
+      title="Continue with Google"
+      description="One secure Google flow signs you in or creates your workspace."
+    >
+      <div v-if="googleHref" class="space-y-5">
+        <a
+          :href="googleHref"
+          class="button-primary inline-flex w-full items-center justify-center gap-2 rounded-[14px] px-5 py-4 text-base font-semibold transition-all duration-200"
+        >
+          <span class="relative z-10 text-white">Continue with Google</span>
+        </a>
+        <p class="text-center text-[13px] leading-relaxed text-black/45">
+          Use your company Google account. If this is your first time, we’ll guide you through workspace setup.
+        </p>
+      </div>
+
+      <div v-else class="space-y-4 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-5 text-[15px] leading-relaxed text-amber-950">
+        <p class="font-semibold">
+          Sign-in is temporarily unavailable
+        </p>
+        <p class="text-amber-950/90">
+          We could not reach Solvomo sign-in services. Please try again shortly or contact your workspace administrator.
+        </p>
+      </div>
+    </AuthFormCard>
+  </AuthShell>
 </template>

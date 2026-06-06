@@ -1,11 +1,13 @@
-import type { AlertItem, BrandProfile, ConnectionStatus, Environment, LabVersionRow, Workspace } from "~/types/app-shell";
+import type { AlertItem, BrandProfile, ConnectionStatus, LabVersionRow, Workspace } from "~/types/app-shell";
+import type { AdUnifiedSnapshot } from "~/types/ad-unified";
 
-export type SolvomoUserId = "neel" | "riya";
+/** Demo persona keys for offline preview; API sessions use Mongo ObjectId strings. */
+export type DemoUserKey = "neel" | "riya";
 
-export type OnboardingStepKey = "survey" | "brand" | "connections";
+export type OnboardingStepKey = "survey" | "brand";
 
 export interface UserProfile {
-  id: SolvomoUserId;
+  id: string;
   name: string;
   email: string;
   title: string;
@@ -278,11 +280,227 @@ export interface OverviewData {
   dashboards: OverviewDashboardConfig[];
 }
 
+export interface PerformanceCampaignRow {
+  id: string;
+  name: string;
+  platform: string;
+  spend: string;
+  revenue: string;
+  roi: string;
+  status: string;
+}
+
+export interface PerformanceAdGroupRow {
+  id: string;
+  name: string;
+  platform: string;
+  spend: string;
+  revenue: string;
+  roi: string;
+  status: string;
+}
+
+export interface PerformanceAdRow {
+  id: string;
+  name: string;
+  platform: string;
+  spend: string;
+  revenue: string;
+  roi: string;
+  status: string;
+}
+
+export interface PerformanceTables {
+  campaigns: PerformanceCampaignRow[];
+  ad_groups: PerformanceAdGroupRow[];
+  ads: PerformanceAdRow[];
+}
+
+export interface CreativeRow {
+  id: string;
+  name: string;
+  platform: string;
+  hook: string;
+  ctr: string;
+  conversion: string;
+  roi: string;
+}
+
+export interface AudienceRow {
+  id: string;
+  audience: string;
+  platform: string;
+  spend: string;
+  roi: string;
+  performance: string;
+}
+
+export interface SpendRow {
+  id: string;
+  channel: string;
+  spend: string;
+  revenue: string;
+  cac: string;
+  roi: string;
+}
+
+export interface CrmRow {
+  id: string;
+  lead_source: string;
+  deals: string;
+  revenue: string;
+  attribution: string;
+}
+
+// ---------------------------------------------------------------------------
+// Playground tab bypass shapes (mirrors api/src/types/playground.ts)
+// ---------------------------------------------------------------------------
+
+export interface PlaygroundSpendMetrics {
+  spend: number;
+  revenue: number;
+  conversions: number;
+  roas: number;
+  cac: number;
+}
+
+export interface PlaygroundSpendConnectionSlice {
+  connection_id: string;
+  connection_slug: string;
+  name: string;
+  status: "ok" | "error";
+  metrics: PlaygroundSpendMetrics | null;
+  previous_metrics?: PlaygroundSpendMetrics | null;
+}
+
+export interface PlaygroundSpendSeriesPoint { date: string; spend: number }
+
+export interface PlaygroundSpendConnectionSeries {
+  connection_id: string;
+  connection_slug: string;
+  name: string;
+  points: PlaygroundSpendSeriesPoint[];
+}
+
+export interface PlaygroundSpendData {
+  summary: {
+    days: number;
+    has_spend_connections: boolean;
+    totals: PlaygroundSpendMetrics | null;
+    previous_totals?: PlaygroundSpendMetrics | null;
+    spend_change_pct?: number;
+    revenue_change_pct?: number;
+    roas_change_pct?: number;
+  };
+  by_connection: {
+    days: number;
+    has_spend_connections: boolean;
+    connections: PlaygroundSpendConnectionSlice[];
+  };
+  series: {
+    days: number;
+    has_spend_connections: boolean;
+    points: PlaygroundSpendSeriesPoint[];
+    by_connection: PlaygroundSpendConnectionSeries[];
+  };
+  campaigns: {
+    days: number;
+    has_spend_connections: boolean;
+    campaigns: Array<{
+      id: string;
+      connection_id: string;
+      connection_slug: string;
+      channel: string;
+      name: string;
+      objective: string;
+      spend: number;
+      revenue: number;
+      conversions: number;
+      roas: number;
+      budget: number;
+      pace_pct: number;
+      alert: "Overpacing" | "On plan" | "Underpacing";
+    }>;
+  };
+}
+
+export interface PlaygroundAssetEnvelope {
+  id: string;
+  name: string;
+  status: "active";
+  source_type: string;
+  workspace_id: string;
+  brandprofile_id: string;
+  created_at: string;
+  updated_at: string;
+  [key: string]: unknown;
+}
+
+export interface PlaygroundAssetsData {
+  creative: PlaygroundAssetEnvelope[];
+  variants: PlaygroundAssetEnvelope[];
+  audience: PlaygroundAssetEnvelope[];
+  budgets: PlaygroundAssetEnvelope[];
+  datasources: PlaygroundAssetEnvelope[];
+}
+
+export interface PlaygroundSimulationRecord {
+  id: string;
+  workspace_id: string;
+  brandprofile_id: string;
+  name: string;
+  output_metrics: string[];
+  run_request: { forecast_days: number; granularity: string; start_date: string; timezone: string };
+  brand: { brand_name: string; industry?: string };
+  connections: Array<{ connection_id: string; connection_slug: string; category: string }>;
+  evolve_status: "reviewed" | "ready_to_push" | "pushed" | "draft";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlaygroundSimulationRunResult {
+  run_id: string;
+  analysis_tab: string;
+  status: "complete";
+  eval_status: "accepted";
+  forecast_days: number;
+  daily_forecast: Array<{
+    date: string;
+    metrics: Record<string, number>;
+    notes?: string[];
+  }>;
+  summary: string;
+  winner_variant_id?: string;
+  confidence_score: number;
+  reasoning: Array<{ claim: string; evidence_ids: string[] }>;
+  assumptions: string[];
+  warnings: string[];
+  evidence: Array<{ id: string; source: string; label: string; confidence: number; data: unknown }>;
+  step_results: Array<{ step_name: string; status: string; duration_ms: number; evidence_ids: string[]; warnings: string[] }>;
+  agent_version: string;
+  prompt_version: string;
+  eval_version: string;
+  source_coverage: {
+    used_config: boolean;
+    used_integration: boolean;
+    used_ai: boolean;
+    used_web: boolean;
+    used_market_data: boolean;
+    used_calibrated_model: boolean;
+    used_provider_fallback: boolean;
+    used_assumptions: boolean;
+  };
+}
+
+export interface PlaygroundSimulationData {
+  simulations: PlaygroundSimulationRecord[];
+  run_result: PlaygroundSimulationRunResult;
+}
+
 export interface SolvomoMockBundle {
   profile: UserProfile;
   workspaces: Workspace[];
-  brands: BrandProfile[];
-  environments: Environment[];
+  brandProfiles: BrandProfile[];
   /** Baseline completed steps when session is created (Neel: all; Riya: none). */
   onboardingDefaults: OnboardingStepKey[];
   /** Command center hero metrics (static demo strings). */
@@ -292,13 +510,20 @@ export interface SolvomoMockBundle {
   connectionsOnboarding: MockConnection[];
   alerts: AlertItem[];
   labVersions: LabVersionRow[];
-  performance: {
-    campaigns: Record<string, unknown>[];
-    ad_groups: Record<string, unknown>[];
-    ads: Record<string, unknown>[];
-  };
-  creatives: Record<string, unknown>[];
-  audience: Record<string, unknown>[];
-  spend: Record<string, unknown>[];
-  crm: Record<string, unknown>[];
+  performance: PerformanceTables;
+  creatives: CreativeRow[];
+  audience: AudienceRow[];
+  spend: SpendRow[];
+  crm: CrmRow[];
+  /** Normalized ad graph from API (production: Mongo; playground: bundled samples). */
+  adUnified?: AdUnifiedSnapshot;
+  /** Rich spend API response shapes — used by the Spend tab playground bypass. */
+  spend_data?: PlaygroundSpendData;
+  /** Pre-seeded asset library — used by Asset tab playground bypass. */
+  assets_data?: PlaygroundAssetsData;
+  /** Pre-run simulation records + canned run result. */
+  simulation_data?: PlaygroundSimulationData;
 }
+
+/** Analytics payload from GET /auth/playground/bundle (no workspace tree). */
+export type PlaygroundPayload = Omit<SolvomoMockBundle, "workspaces" | "brandProfiles">;

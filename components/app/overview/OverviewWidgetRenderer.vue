@@ -241,11 +241,11 @@ const donutStyle = computed(() => {
                   :key="series.label"
                   class="h-full rounded-full"
                   :class="colorClass(series.color)"
-                  :style="{ width: `${((series.values[index] ?? 0) / chartMax) * 100}%` }"
+                  :style="{ width: `${((series.values[index] || 0) / chartMax) * 100}%` }"
                 />
               </div>
               <span class="w-10 shrink-0 text-right text-[11px] font-semibold tabular-nums text-black/70">
-                {{ formatAxisTick(payload.series[0]?.values[index] ?? 0) }}
+                {{ formatAxisTick(payload.series[0]?.values[index] || 0) }}
               </span>
             </div>
           </div>
@@ -266,7 +266,7 @@ const donutStyle = computed(() => {
                       :key="`${label}-${series.label}`"
                       class="w-full max-w-[2.25rem] rounded-t-md sm:max-w-none sm:rounded-t-lg"
                       :class="colorClass(series.color)"
-                      :style="{ height: `${((series.values[index] ?? 0) / chartMax) * 100}%` }"
+                      :style="{ height: `${((series.values[index] || 0) / chartMax) * 100}%` }"
                     />
                   </div>
                   <span class="text-center text-[11px] font-medium leading-tight text-black/50">{{ label }}</span>
@@ -283,7 +283,7 @@ const donutStyle = computed(() => {
             <div class="flex items-center justify-between gap-3">
               <span class="text-[13px] font-semibold text-black/75">{{ label }}</span>
               <span class="text-[12px] font-medium tabular-nums text-black/50">
-                {{ formatScaleValue(payload.series.reduce((sum, series) => sum + (series.values[index] ?? 0), 0)) }}
+                {{ formatScaleValue(payload.series.reduce((sum, series) => sum + (series.values[index] || 0), 0)) }}
               </span>
             </div>
             <div class="flex h-3 overflow-hidden rounded-full bg-black/[0.04]">
@@ -418,7 +418,7 @@ const donutStyle = computed(() => {
             v-if="idx < payload.stages.length - 1 && payload.stages[idx + 1]?.rateFromPrev != null"
             class="mt-1 mb-1 pl-1 text-[10px] font-medium tabular-nums text-black/40"
           >
-            → {{ (payload.stages[idx + 1]?.rateFromPrev ?? 0).toFixed(1) }}% to next
+            → {{ (payload.stages[idx + 1]?.rateFromPrev || 0).toFixed(1) }}% to next
           </p>
         </div>
       </div>

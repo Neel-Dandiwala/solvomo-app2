@@ -7,7 +7,8 @@ definePageMeta({ layout: "app" });
 useHead({ title: "Settings — Solvomo" });
 
 const auth = useAuth();
-const { currentWorkspace, currentBrand } = useWorkspaceContext();
+const { currentWorkspace, currentBrandProfile } = useWorkspaceContext();
+const { isPlayground } = usePlayground();
 
 const section = ref<"user" | "workspace" | "brand" | "members" | "api">("user");
 
@@ -57,8 +58,8 @@ const navSections = [
     <SurfaceCard variant="soft" padding="sm" class="border border-black/[0.05]">
       <AnalyticsMetadataStrip
         :items="[
-          { label: 'Workspace', value: currentWorkspace?.name ?? '—' },
-          { label: 'Brand', value: currentBrand?.name ?? '—' },
+          { label: 'Workspace', value: currentWorkspace?.name || '—' },
+          { label: 'Brand profile', value: currentBrandProfile?.name || '—' },
         ]"
       />
     </SurfaceCard>
@@ -159,27 +160,32 @@ const navSections = [
           <p class="mt-1 text-sm text-black/50">
             Collaborators in this workspace.
           </p>
-          <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
-            <p class="sv-section-title">
-              Directory
+          <template v-if="isPlayground">
+            <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
+              <p class="sv-section-title">
+                Directory
+              </p>
+              <button type="button" class="button-secondary rounded-xl px-4 py-2 text-sm font-semibold">
+                Invite member
+              </button>
+            </div>
+            <div class="mt-4">
+              <DataTable :columns="memberColumns" :rows="memberRows" row-key="id" embed>
+                <template #cell-status="{ value }">
+                  <StatusBadge
+                    :label="value === 'invited' ? 'Invited' : 'Active'"
+                    :variant="value === 'invited' ? 'pending' : 'success'"
+                  />
+                </template>
+              </DataTable>
+            </div>
+            <p class="mt-4 text-[12px] text-black/45">
+              Seats and SSO roles sync when your identity provider is connected. Until then, this list is workspace-managed.
             </p>
-            <button type="button" class="button-secondary rounded-xl px-4 py-2 text-sm font-semibold">
-              Invite member
-            </button>
+          </template>
+          <div v-else class="mt-6 rounded-2xl border border-dashed border-black/12 bg-black/[0.015] p-6 text-sm text-black/45">
+            Member management is coming soon. Invite links and SSO sync will appear here.
           </div>
-          <div class="mt-4">
-            <DataTable :columns="memberColumns" :rows="memberRows" row-key="id" embed>
-              <template #cell-status="{ value }">
-                <StatusBadge
-                  :label="value === 'invited' ? 'Invited' : 'Active'"
-                  :variant="value === 'invited' ? 'pending' : 'success'"
-                />
-              </template>
-            </DataTable>
-          </div>
-          <p class="mt-4 text-[12px] text-black/45">
-            Seats and SSO roles sync when your identity provider is connected. Until then, this list is workspace-managed (demo data).
-          </p>
         </template>
 
         <template v-else-if="section === 'api'">
@@ -189,25 +195,30 @@ const navSections = [
           <p class="mt-1 text-sm text-black/50">
             Programmatic access scoped to this workspace.
           </p>
-          <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
-            <p class="sv-section-title">
-              Issued keys
+          <template v-if="isPlayground">
+            <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
+              <p class="sv-section-title">
+                Issued keys
+              </p>
+              <button type="button" class="button-primary rounded-xl px-4 py-2 text-sm font-semibold text-white">
+                Create API key
+              </button>
+            </div>
+            <div class="mt-4">
+              <DataTable :columns="apiKeyColumns" :rows="apiKeyRows" row-key="id" embed />
+            </div>
+            <p class="mt-4 text-[12px] text-black/45">
+              Rotate keys from this list; audit logs retain the last 90 days of usage.
             </p>
-            <button type="button" class="button-primary rounded-xl px-4 py-2 text-sm font-semibold text-white">
-              Create API key
-            </button>
+          </template>
+          <div v-else class="mt-6 rounded-2xl border border-dashed border-black/12 bg-black/[0.015] p-6 text-sm text-black/45">
+            API key management is not yet available. Keys and scopes will appear here once enabled for your workspace.
           </div>
-          <div class="mt-4">
-            <DataTable :columns="apiKeyColumns" :rows="apiKeyRows" row-key="id" embed />
-          </div>
-          <p class="mt-4 text-[12px] text-black/45">
-            Rotate keys from this list; audit logs retain the last 90 days of usage (preview — demo values).
-          </p>
         </template>
 
         <template v-else>
           <h2 class="sv-card-title">
-            Brand & attribution — {{ currentBrand?.name }}
+            Brand profile & attribution — {{ currentBrandProfile?.name }}
           </h2>
           <p class="mt-1 text-sm text-black/50">
             Currency and attribution for this brand profile only.
@@ -215,11 +226,11 @@ const navSections = [
           <ul class="mt-6 space-y-3 text-sm text-black/65">
             <li>
               <span class="font-semibold text-black">Currency:</span>
-              {{ currentBrand?.currency }}
+              {{ currentBrandProfile?.currency }}
             </li>
             <li>
               <span class="font-semibold text-black">Attribution:</span>
-              {{ currentBrand?.attributionPreference }}
+              {{ currentBrandProfile?.attributionPreference }}
             </li>
           </ul>
           <NuxtLink

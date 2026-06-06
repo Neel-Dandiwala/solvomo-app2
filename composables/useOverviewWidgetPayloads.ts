@@ -81,7 +81,7 @@ function findKpiForWidget(
     metric === "pipeline_revenue"
       ? snapshot.kpis.find((k) => k.id === "pipeline" || k.id === "pipeline_revenue")
       : snapshot.kpis.find((k) => k.id === metric);
-  return byId ?? snapshot.kpis.find((k) => k.label === widget.title);
+  return byId || snapshot.kpis.find((k) => k.label === widget.title);
 }
 
 function sparklineForMetric(
@@ -117,7 +117,7 @@ function groupSpendRecords(records: OverviewSpendRecord[], by: "channel" | "vend
     const key = record[by];
     if (!groups.has(key)) groups.set(key, {});
     const next = groups.get(key)!;
-    next[record.category] = (next[record.category] ?? 0) + record.amount;
+    next[record.category] = (next[record.category] || 0) + record.amount;
   }
 
   const categories = [...groups.keys()];
@@ -127,8 +127,8 @@ function groupSpendRecords(records: OverviewSpendRecord[], by: "channel" | "vend
     labels: categories,
     series: stackKeys.map((stackKey, index) => ({
       label: stackKey,
-      color: (["brand", "product", "interaction", "depth"][index % 4] ?? "product") as WidgetSeries["color"],
-      values: categories.map((category) => groups.get(category)?.[stackKey] ?? 0),
+      color: (["brand", "product", "interaction", "depth"][index % 4] || "product") as WidgetSeries["color"],
+      values: categories.map((category) => groups.get(category)?.[stackKey] || 0),
     })),
   };
 }
@@ -437,9 +437,9 @@ export function useOverviewWidgetPayloads() {
             values: trendPoints.map((point) => {
               if (widget.metric === "conversions") {
                 const p = point as (typeof snapshot.trendPoints)[number];
-                return Number(p.conversions ?? p.qualifiedLeads * 0.35);
+                return Number(p.conversions || 0);
               }
-              return Number(point[valueKey as keyof (typeof trendPoints)[number]] ?? 0);
+              return Number(point[valueKey as keyof (typeof trendPoints)[number]] || 0);
             }),
           },
         ],
@@ -466,7 +466,7 @@ export function useOverviewWidgetPayloads() {
           {
             label: widget.title,
             color: widget.metric === "roi" ? "interaction" : widget.metric === "spend" ? "depth" : "product",
-            values: snapshot.platformSummaries.map((row) => Number(row[valueKey as keyof (typeof snapshot.platformSummaries)[number]] ?? 0)),
+            values: snapshot.platformSummaries.map((row) => Number(row[valueKey as keyof (typeof snapshot.platformSummaries)[number]] || 0)),
           },
         ],
       };
@@ -501,7 +501,7 @@ export function useOverviewWidgetPayloads() {
                 label: widget.title,
                 color: "depth",
                 values: grouped.labels.map((label, index) =>
-                  grouped.series.reduce((sum, series) => sum + (series.values[index] ?? 0), 0),
+                  grouped.series.reduce((sum, series) => sum + (series.values[index] || 0), 0),
                 ),
               },
             ],
