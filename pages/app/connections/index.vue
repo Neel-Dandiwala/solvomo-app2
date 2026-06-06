@@ -13,7 +13,7 @@ const auth = useAuth();
 const loggedIn = computed(() => auth.isAuthenticated.value);
 const api = useApiClient();
 const workspace = useWorkspaceContext();
-const playground = usePlayground();
+const playground = useAppData();
 const { integrations, loading, error: directoryError, refresh: refreshDirectory } =
   useConnectionsTab();
 

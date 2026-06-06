@@ -30,13 +30,6 @@ const emit = defineEmits<{
         </p>
       </motion.div>
       <div class="flex flex-wrap gap-2">
-        <NuxtLink
-          to="/views/create"
-          class="inline-flex items-center gap-1.5 rounded-xl border border-black/[0.08] bg-white px-3 py-2 text-[12px] font-medium text-black/80 transition hover:border-black/[0.14]"
-        >
-          <Plus class="h-3.5 w-3.5" :stroke-width="2" />
-          Manual create
-        </NuxtLink>
         <button
           type="button"
           class="inline-flex items-center gap-1.5 rounded-xl border border-black/[0.08] bg-black px-3 py-2 text-[12px] font-medium text-white transition hover:bg-black/90"

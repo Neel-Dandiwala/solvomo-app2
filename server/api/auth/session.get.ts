@@ -15,26 +15,26 @@ export default defineEventHandler(async (event) => {
     const contextResponse = await fetch(apiTarget("/auth/context"), { headers });
     const context = await readApiResponse<{
       workspaces: unknown[];
-      brandProfiles: unknown[];
+      brand_profiles: unknown[];
     }>(contextResponse);
 
     await setUserSession(event, {
       user: me.user || undefined,
       workspaces: context.workspaces,
-      brandProfiles: context.brandProfiles,
+      brand_profiles: context.brand_profiles,
     });
 
     return routeResponse({
       user: me.user,
       workspaces: context.workspaces,
-      brandProfiles: context.brandProfiles,
+      brand_profiles: context.brand_profiles,
     });
   } catch {
     await clearUserSession(event);
     return routeResponse({
       user: null,
       workspaces: [],
-      brandProfiles: [],
+      brand_profiles: [],
     });
   }
 });

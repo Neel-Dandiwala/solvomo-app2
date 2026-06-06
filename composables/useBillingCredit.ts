@@ -21,7 +21,7 @@ export function useBillingCredit() {
       const res = await api.getJson<{
         credits_remaining: number;
         usage: { credits: { allowance: number; used: number } };
-      }>(`/workspaces/${encodeURIComponent(workspaceId)}/billing`);
+      }>(`/billing/workspaces/${encodeURIComponent(workspaceId)}/billing`);
       creditsRemaining.value = res.credits_remaining ?? null;
       creditsAllowance.value = res.usage?.credits?.allowance ?? null;
     } catch {

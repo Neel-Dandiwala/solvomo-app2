@@ -1,43 +1,25 @@
 import type { ConnectionRow } from "~/types/connections-data";
-
-export type EvolveStatus =
-  | "draft"
-  | "reviewed"
-  | "ready_to_push"
-  | "pushed"
-  | "failed_validation";
+import type { SimulationEvolveStatus, SimulationRecord } from "~/types/simulation";
 
 export type PushValidationResult = {
   eligible: boolean;
   failures: string[];
-  status: EvolveStatus;
+  status: SimulationEvolveStatus;
 };
 
-type SimulationRow = {
-  id: string;
-  name: string;
-  variant_id?: string;
-  audience_id?: string;
-  budget_id?: string;
-  hydrated?: {
-    variants?: Array<{
-      platform?: string;
-      object_type?: string;
-      headline?: string | null;
-      primary_text?: string | null;
-    }>;
-    audience?: Record<string, unknown>;
-    budget?: Record<string, unknown>;
-  };
+type SimulationPushRow = Pick<
+  SimulationRecord,
+  "id" | "name" | "variant_id" | "audience_id" | "budget_id" | "evolve_status" | "hydrated"
+> & {
   variants?: Array<{
     platform?: string;
     object_type?: string;
     headline?: string | null;
     primary_text?: string | null;
+    label?: string;
   }>;
   audience?: Record<string, unknown>;
   budget?: Record<string, unknown> | number;
-  evolve_status?: string;
 };
 
 export function useSimulationPushValidation() {
@@ -53,7 +35,7 @@ export function useSimulationPushValidation() {
     });
   }
 
-  function validatePush(simulation: SimulationRow): PushValidationResult {
+  function validatePush(simulation: SimulationPushRow): PushValidationResult {
     const failures: string[] = [];
     const connections = activeConnectionsForBrand();
 
@@ -80,30 +62,31 @@ export function useSimulationPushValidation() {
     }
 
     const budget = hydrated?.budget || simulation.budget;
-    const budgetAmount =
-      typeof budget === "number"
-        ? budget
-        : typeof budget === "object" && budget && "amount" in budget
-          ? Number((budget as { amount?: unknown }).amount)
-          : 0;
-    if (!budgetAmount || budgetAmount <= 0) {
-      failures.push("Valid budget is required.");
+    const hasBudget =
+      Boolean(simulation.budget_id) ||
+      (budget && typeof budget === "object" && Object.keys(budget).length > 0) ||
+      typeof budget === "number";
+    if (!hasBudget) {
+      failures.push("Budget is required.");
     }
 
+    let status: SimulationEvolveStatus = "draft";
     if (simulation.evolve_status === "pushed") {
-      failures.push("Simulation was already pushed.");
+      status = "pushed";
+    } else if (failures.length) {
+      status = "failed_validation";
+    } else if (simulation.evolve_status === "reviewed") {
+      status = "reviewed";
+    } else if (simulation.evolve_status === "ready_to_push") {
+      status = "ready_to_push";
     }
 
-    const eligible = failures.length === 0;
-    let status: EvolveStatus = "draft";
-    if (simulation.evolve_status === "pushed") status = "pushed";
-    else if (!eligible) status = "failed_validation";
-    else if (simulation.evolve_status === "reviewed") status = "ready_to_push";
-    else if (simulation.evolve_status === "ready_to_push") status = "ready_to_push";
-    else status = eligible ? "reviewed" : "draft";
-
-    return { eligible, failures, status };
+    return {
+      eligible: failures.length === 0 && status !== "pushed",
+      failures,
+      status,
+    };
   }
 
-  return { validatePush, activeConnectionsForBrand };
+  return { validatePush };
 }

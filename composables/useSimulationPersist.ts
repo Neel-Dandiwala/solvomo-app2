@@ -1,44 +1,7 @@
-type PersistBody = {
-  workspace_id: string;
-  brandprofile_id: string;
-  name: string;
-  creative_id?: string;
-  variant_id?: string;
-  audience_id?: string;
-  budget_id?: string;
-  connections?: Array<{
-    connection_id: string;
-    connection_slug: string;
-    category: string;
-  }>;
-  brand: Record<string, unknown>;
-  offer?: Record<string, unknown>;
-  target_metrics?: Record<string, number>;
-  output_metrics: string[];
-  run_request: Record<string, unknown>;
-  bid_strategy?: string;
-  evolve_status?: string;
-};
-
-type HydratedConfig = {
-  workspace_id: string;
-  brandprofile_id: string;
-  name: string;
-  connections: Array<{
-    connection_id: string;
-    connection_slug: string;
-    category: string;
-  }>;
-  brand: Record<string, unknown>;
-  variants: Array<Record<string, unknown>>;
-  audience?: Record<string, unknown>;
-  offer?: Record<string, unknown>;
-  target_metrics?: Record<string, number>;
-  output_metrics: string[];
-  budget?: Record<string, unknown>;
-  bid_strategy?: string;
-  run_request: Record<string, unknown>;
-};
+import type {
+  SimulationConfig,
+  SimulationPersistBody,
+} from "~/types/simulation";
 
 /**
  * Creates immutable asset rows from a hydrated-style config, then returns simulation persist refs.
@@ -54,9 +17,9 @@ export function useSimulationPersist() {
    * archived (soft-deleted) before re-throwing, preventing orphaned records.
    */
   async function persistFromConfig(
-    config: HydratedConfig,
+    config: SimulationConfig,
     simulationName: string,
-  ): Promise<PersistBody> {
+  ): Promise<SimulationPersistBody> {
     const ws = config.workspace_id || workspace.currentWorkspaceId.value;
     const bp = config.brandprofile_id || workspace.currentBrandProfileId.value;
     if (!ws || !bp) {

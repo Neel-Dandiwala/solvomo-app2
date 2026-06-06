@@ -1,5 +1,12 @@
 import { createProductionPlaceholder } from "~/data/production-placeholder";
-import type { PlaygroundPayload, SolvomoMockBundle } from "~/types/mock";
+import type {
+  MockConnection,
+  PlaygroundAssetsData,
+  PlaygroundPayload,
+  PlaygroundSimulationData,
+  PlaygroundSpendData,
+  SolvomoMockBundle,
+} from "~/types/mock";
 
 function mergePlaygroundPayload(payload: PlaygroundPayload, session: AuthSession): SolvomoMockBundle {
   return {
@@ -43,7 +50,8 @@ export function useAppData() {
       return;
     }
     try {
-      playgroundPayload.value = await api.getJson<PlaygroundPayload>("/auth/playground/bundle");
+      const res = await api.getJson<{ payload: PlaygroundPayload }>("/auth/playground/bundle");
+      playgroundPayload.value = res.payload ?? null;
     } catch {
       playgroundPayload.value = null;
     }
@@ -66,7 +74,6 @@ export function useAppData() {
     return null;
   });
 
-  const currentProfile = computed(() => bundle.value?.profile || null);
   const hasBundle = computed(() => bundle.value !== null);
   const hasWorkspaceScope = computed(
     () => !!workspace.currentWorkspace.value && !!workspace.currentBrandProfile.value,
@@ -84,15 +91,6 @@ export function useAppData() {
     }
   });
 
-  /** Full playground overview / widgets only in this mode (API Playground bundle). */
-  const isPlaygroundOverviewDemo = computed(
-    () =>
-      Boolean(
-        workspace.isPlayground.value &&
-          workspace.currentBrandProfile.value?.isPlaygroundSystem &&
-          playgroundPayload.value,
-      ),
-  );
   const dataStatus = computed<"ready" | "missing_session" | "missing_scope">(() => {
     if (!hasBundle.value) return "missing_session";
     if (!hasWorkspaceScope.value) return "missing_scope";
@@ -101,56 +99,35 @@ export function useAppData() {
 
   const overviewHero = computed(() => bundle.value?.overviewHero || null);
   const overview = computed(() => bundle.value?.overview || null);
-
-  const alerts = computed(() => bundle.value?.alerts || []);
-  const labVersions = computed(() => bundle.value?.labVersions || []);
-  const connectionsShell = computed(() => bundle.value?.connectionsShell || []);
-  const connectionsOnboarding = computed(() => bundle.value?.connectionsOnboarding || []);
-  const creatives = computed(() => bundle.value?.creatives || []);
-  const audience = computed(() => bundle.value?.audience || []);
   const spend = computed(() => bundle.value?.spend || []);
-  const crm = computed(() => bundle.value?.crm || []);
 
-  const performanceCampaigns = computed(() => bundle.value?.performance.campaigns || []);
-  const performanceAdGroups = computed(() => bundle.value?.performance.ad_groups || []);
-  const performanceAds = computed(() => bundle.value?.performance.ads || []);
-  const adUnified = computed(() => bundle.value?.adUnified || null);
-
-  function performanceRows(view: "campaigns" | "ad_groups" | "ads") {
-    switch (view) {
-      case "ad_groups":
-        return performanceAdGroups.value;
-      case "ads":
-        return performanceAds.value;
-      default:
-        return performanceCampaigns.value;
-    }
-  }
+  const isPlayground = computed(() => workspace.isPlayground.value);
+  const spendData = computed((): PlaygroundSpendData | null =>
+    bundle.value?.spend_data ?? null,
+  );
+  const assetsData = computed((): PlaygroundAssetsData | null =>
+    bundle.value?.assets_data ?? null,
+  );
+  const simulationData = computed((): PlaygroundSimulationData | null =>
+    bundle.value?.simulation_data ?? null,
+  );
+  const connectionsShell = computed((): MockConnection[] =>
+    bundle.value?.connectionsShell ?? [],
+  );
 
   return {
     bundle,
-    currentProfile,
-    hasBundle,
-    hasWorkspaceScope,
     dataStatus,
     userConnections,
     refreshUserConnections,
     hasActiveConnections,
-    isPlaygroundOverviewDemo,
     overviewHero,
     overview,
-    alerts,
-    labVersions,
-    connectionsShell,
-    connectionsOnboarding,
-    creatives,
-    audience,
     spend,
-    crm,
-    performanceCampaigns,
-    performanceAdGroups,
-    performanceAds,
-    performanceRows,
-    adUnified,
+    isPlayground,
+    spendData,
+    assetsData,
+    simulationData,
+    connectionsShell,
   };
 }

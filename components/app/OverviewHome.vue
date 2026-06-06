@@ -25,7 +25,6 @@ const workspace = useWorkspaceContext();
 const { overview, overviewHero, dataStatus, spend } = useAppData();
 const {
   userConnections,
-  userConnectionsLoaded,
   refreshConnectionsData,
   integrationBySlug,
 } = useConnectionsData();
@@ -55,9 +54,9 @@ onMounted(() => {
 const activeConnections = computed(() => {
   const brandId = workspace.currentBrandProfileId.value;
   return userConnections.value.filter((c) => {
-    if (!c.isActive) return false;
-    if (!brandId || !c.brandProfileId) return true;
-    return c.brandProfileId === brandId;
+    if (!c.is_active) return false;
+    if (!brandId || !c.brandprofile_id) return true;
+    return c.brandprofile_id === brandId;
   });
 });
 
@@ -245,7 +244,7 @@ async function loadRecentSimulations() {
   simulationsLoading.value = true;
   try {
     const res = await api.getJson<
-      Array<{ id: string; name: string; createdAt?: string; variants?: Array<{ platform?: string }> }>
+      Array<{ id: string; name: string; created_at?: string; variants?: Array<{ platform?: string }> }>
     >(
       `/simulations${brandScopeQuery(ws, bp)}&limit=5`,
     );
@@ -253,7 +252,7 @@ async function loadRecentSimulations() {
       id: s.id,
       name: s.name,
       platform: s.variants?.[0]?.platform,
-      createdAt: s.createdAt,
+      createdAt: s.created_at,
     }));
   } catch {
     recentSimulations.value = [];

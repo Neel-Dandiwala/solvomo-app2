@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowRight, Copy, FlaskConical, Rocket } from "lucide-vue-next";
-import type { EvolveStatus } from "~/composables/useSimulationPushValidation";
+import type { SimulationEvolveStatus } from "~/types/simulation";
 import { brandScopeQuery } from "~/utils/apiScope";
 
 definePageMeta({ layout: "app" });
@@ -9,7 +9,7 @@ useHead({ title: "Evolve — Solvomo" });
 
 const api = useApiClient();
 const workspace = useWorkspaceContext();
-const playground = usePlayground();
+const playground = useAppData();
 const { validatePush } = useSimulationPushValidation();
 const route = useRoute();
 
@@ -30,7 +30,7 @@ const loading = ref(false);
 const loadError = ref<string | null>(null);
 const pushBusyId = ref<string | null>(null);
 
-const statusLabels: Record<EvolveStatus, string> = {
+const statusLabels: Record<SimulationEvolveStatus, string> = {
   draft: "Draft",
   reviewed: "Reviewed",
   ready_to_push: "Ready to Push",
@@ -38,7 +38,7 @@ const statusLabels: Record<EvolveStatus, string> = {
   failed_validation: "Failed Validation",
 };
 
-function statusVariant(status: EvolveStatus): "neutral" | "info" | "success" | "warning" | "danger" {
+function statusVariant(status: SimulationEvolveStatus): "neutral" | "info" | "success" | "warning" | "danger" {
   if (status === "ready_to_push") return "success";
   if (status === "pushed") return "info";
   if (status === "failed_validation") return "danger";
@@ -69,7 +69,7 @@ function budgetLabel(row: SimulationRow) {
   return "—";
 }
 
-function rowStatus(row: SimulationRow): EvolveStatus {
+function rowStatus(row: SimulationRow): SimulationEvolveStatus {
   return validatePush(row).status;
 }
 

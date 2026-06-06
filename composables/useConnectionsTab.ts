@@ -27,7 +27,7 @@ export function useConnectionsTab() {
   const auth = useAuth();
   const config = useRuntimeConfig();
   const workspace = useWorkspaceContext();
-  const playground = usePlayground();
+  const playground = useAppData();
 
   const directory = ref<ConnectionsDirectoryResponse | null>(null);
   const loading = ref(false);

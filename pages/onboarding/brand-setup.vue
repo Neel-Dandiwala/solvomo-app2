@@ -9,6 +9,7 @@ definePageMeta({ layout: "onboarding" });
 useHead({ title: "Onboarding — Brand profile | Solvomo" });
 
 const auth = useAuth();
+const api = useApiClient();
 const {
   currentWorkspace,
   currentBrandProfile,
@@ -18,6 +19,9 @@ const {
   currentWorkspaceId,
 } = useWorkspaceContext();
 const { draft, restoreDraft, resetDraft } = useOnboardingDraft();
+
+const saving = ref(false);
+const saveError = ref<string | null>(null);
 
 restoreDraft();
 
@@ -57,41 +61,61 @@ function removeSocialHandle(index: number) {
 }
 
 async function finishOnboarding() {
-  const wsId = currentWorkspaceId.value;
-  if (wsId) {
-    const widx = workspaces.value.findIndex((w) => w.id === wsId);
-    if (widx !== -1) {
-      const wname = draft.value.workspaceName?.trim();
-      if (wname) {
-        workspaces.value[widx] = { ...workspaces.value[widx]!, name: wname };
+  saving.value = true;
+  saveError.value = null;
+  try {
+    const wsId = currentWorkspaceId.value;
+    const wname = draft.value.workspaceName?.trim();
+    if (wsId && wname) {
+      const updated = await api.patchJson<{ id: string; name: string }>(
+        `/auth/workspaces/${encodeURIComponent(wsId)}`,
+        { name: wname },
+      );
+      const widx = workspaces.value.findIndex((w) => w.id === wsId);
+      if (widx !== -1) {
+        workspaces.value[widx] = { ...workspaces.value[widx]!, name: updated.name };
       }
     }
-  }
 
-  const bpId = currentBrandProfile.value?.id;
-  if (bpId) {
-    const idx = brandProfiles.value.findIndex((bp: (typeof brandProfiles.value)[number]) => bp.id === bpId);
-    if (idx !== -1) {
-      brandProfiles.value[idx] = {
-        ...brandProfiles.value[idx]!,
-        name: draft.value.brandName || brandProfiles.value[idx]!.name,
-        currency: draft.value.currency || brandProfiles.value[idx]!.currency,
-        socialHandles: draft.value.socialHandles
-          .map((row) => ({
-            platform: row.platform.trim(),
-            handle: row.handle.trim(),
-            profileUrl: row.profileUrl.trim() || undefined,
-          }))
-          .filter((row) => row.platform && (row.handle || row.profileUrl)),
-      };
+    const bpId = currentBrandProfile.value?.id;
+    if (bpId) {
+      const patchPayload: Record<string, unknown> = {};
+      if (draft.value.brandName?.trim()) patchPayload.brand_name = draft.value.brandName.trim();
+      if (draft.value.currency) patchPayload.currency = draft.value.currency;
+      const social_handles = draft.value.socialHandles
+        .map((row) => ({
+          platform: row.platform.trim(),
+          handle: row.handle.trim(),
+          profile_url: row.profileUrl.trim() || undefined,
+        }))
+        .filter((row) => row.platform && (row.handle || row.profile_url));
+      if (social_handles.length) patchPayload.social_handles = social_handles;
+
+      if (Object.keys(patchPayload).length) {
+        await api.patchJson(`/auth/brand-profiles/${encodeURIComponent(bpId)}`, patchPayload);
+      }
+
+      const idx = brandProfiles.value.findIndex((bp: (typeof brandProfiles.value)[number]) => bp.id === bpId);
+      if (idx !== -1) {
+        brandProfiles.value[idx] = {
+          ...brandProfiles.value[idx]!,
+          name: draft.value.brandName || brandProfiles.value[idx]!.name,
+          currency: draft.value.currency || brandProfiles.value[idx]!.currency,
+        };
+      }
     }
+
+    auth.completeOnboardingStep("brand");
+    resetDraft();
+    await navigateTo(nextOnboardingPathForSteps([
+      ...auth.onboardingStepsDone.value,
+      "brand",
+    ]));
+  } catch (err: unknown) {
+    saveError.value = err instanceof Error ? err.message : "Failed to save. Please try again.";
+  } finally {
+    saving.value = false;
   }
-  auth.completeOnboardingStep("brand");
-  resetDraft();
-  await navigateTo(nextOnboardingPathForSteps([
-    ...auth.onboardingStepsDone.value,
-    "brand",
-  ]));
 }
 </script>
 
@@ -217,13 +241,17 @@ async function finishOnboarding() {
         <NuxtLink :to="ONBOARDING_ROUTE_BY_STEP.survey" class="nav-link inline-flex text-sm font-semibold">
           Back
         </NuxtLink>
-        <button
-          type="button"
-          class="button-primary rounded-xl px-5 py-2.5 text-sm font-semibold text-white"
-          @click="finishOnboarding"
-        >
-          Continue
-        </button>
+        <div class="flex flex-col items-end gap-2">
+          <p v-if="saveError" class="text-xs text-red-600">{{ saveError }}</p>
+          <button
+            type="button"
+            class="button-primary rounded-xl px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            :disabled="saving"
+            @click="finishOnboarding"
+          >
+            {{ saving ? "Saving…" : "Continue" }}
+          </button>
+        </div>
       </div>
     </SurfaceCard>
   </div>

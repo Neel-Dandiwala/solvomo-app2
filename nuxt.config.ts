@@ -29,6 +29,20 @@ export default defineNuxtConfig({
       "/**": {
         headers: { "cache-control": "no-cache, private, must-revalidate" },
       },
+      // Legacy route redirects (301) — shim pages deleted; keep SEO and bookmark compatibility.
+      "/app/overview": { redirect: { to: "/app", statusCode: 301 } },
+      "/app/performance": { redirect: { to: "/app/dashboards", statusCode: 301 } },
+      "/app/alerts": { redirect: { to: "/app/insights", statusCode: 301 } },
+      "/app/lab": { redirect: { to: "/app/evolve", statusCode: 301 } },
+      "/app/crm": { redirect: { to: "/app/assets/audience", statusCode: 301 } },
+      "/app/audience": { redirect: { to: "/app/assets/audience", statusCode: 301 } },
+      "/app/creatives": { redirect: { to: "/app/assets/creative", statusCode: 301 } },
+      "/app/integrations": { redirect: { to: "/app/connections", statusCode: 301 } },
+      "/app/integrations/**": { redirect: { to: "/app/connections", statusCode: 301 } },
+      "/app/connections/connect/**": { redirect: { to: "/app/connections", statusCode: 301 } },
+      "/login": { redirect: { to: "/", statusCode: 301 } },
+      "/signup": { redirect: { to: "/", statusCode: 301 } },
+      "/views/**": { redirect: { to: "/app/dashboards", statusCode: 301 } },
     },
   },
   vite: {

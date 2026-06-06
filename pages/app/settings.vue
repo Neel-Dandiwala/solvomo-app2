@@ -7,8 +7,7 @@ definePageMeta({ layout: "app" });
 useHead({ title: "Settings — Solvomo" });
 
 const auth = useAuth();
-const { currentWorkspace, currentBrandProfile } = useWorkspaceContext();
-const { isPlayground } = usePlayground();
+const { currentWorkspace, currentBrandProfile, isPlayground } = useWorkspaceContext();
 
 const section = ref<"user" | "workspace" | "brand" | "members" | "api">("user");
 

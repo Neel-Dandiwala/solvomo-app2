@@ -12,14 +12,6 @@ useHead({ title: "Spend — Solvomo" });
 
 const ALL_SCOPE = "All";
 
-const {
-  formatCompactCurrency,
-  formatCurrency,
-  formatPercent,
-  formatMultiplier,
-  channelVariant,
-  statusVariant,
-} = useDemoAnalytics();
 
 const {
   summary,

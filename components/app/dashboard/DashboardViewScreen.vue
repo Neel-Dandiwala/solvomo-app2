@@ -6,11 +6,13 @@ import EmptyDashboardState from "~/components/app/overview/EmptyDashboardState.v
 import type {
   BuilderOptionsResponse,
   DatasourceDraft,
+  SavedViewDetail,
   SavedViewLayout,
   SavedWidget,
   SavedWidgetPayload,
   WidgetDraft,
 } from "~/types/saved-view";
+import { brandScopeQuery } from "~/utils/apiScope";
 import { datasourceKeyForDraft } from "~/utils/dashboardWidgetMetrics";
 
 const props = defineProps<{
@@ -18,8 +20,9 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const api = useApiClient();
+const workspace = useWorkspaceContext();
 const { currentViewDetail, fetchView, viewsLoading, viewsError } = useOverviewViews();
-const { patchViewLayout } = useDashboardIntelligence();
 const {
   fetchBuilderOptions,
   updateView,
@@ -28,6 +31,22 @@ const {
   deleteWidget,
   fetchPayloads,
 } = useDashboardViewBuilder();
+
+async function patchViewLayout(
+  viewId: string,
+  body: {
+    layout?: unknown;
+    widget_ids?: string[];
+  },
+) {
+  const ws = workspace.currentWorkspaceId.value?.trim();
+  const bp = workspace.currentBrandProfileId.value?.trim();
+  if (!ws || !bp) return null;
+  return api.patchJson<SavedViewDetail>(
+    `/views/${encodeURIComponent(viewId)}${brandScopeQuery(ws, bp)}`,
+    body,
+  );
+}
 
 const builderOptions = ref<BuilderOptionsResponse | null>(null);
 const savedPayloads = ref<Record<string, SavedWidgetPayload>>({});

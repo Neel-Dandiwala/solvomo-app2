@@ -10,14 +10,12 @@ import {
   Plus,
   RefreshCcw,
   Save,
-  Sparkles,
 } from "lucide-vue-next";
 import { brandScopeQuery } from "~/utils/apiScope";
 import type {
   SimulationAnalysisTab,
   SimulationConfig,
   SimulationMetricKey,
-  SimulationPersistBody,
   SimulationRecord,
   SimulationRunResult,
   SimulationVariantConfig,
@@ -44,13 +42,10 @@ type AssetOption = {
 const api = useApiClient();
 const auth = useAuth();
 const workspace = useWorkspaceContext();
-const playground = usePlayground();
+const playground = useAppData();
 const { persistFromConfig } = useSimulationPersist();
 const { creditLabel, creditsRemaining, refreshCredit } = useBillingCredit();
 const route = useRoute();
-const demo = useDemoAnalytics();
-const { formatCompactCurrency, formatCompactNumber, formatCurrency, formatMultiplier, formatPercent } = demo;
-
 // Canonical region options with ISO country codes for the timing/holiday pipeline
 const AUDIENCE_REGIONS = [
   { label: "United States", name: "United States", country_code: "US" },
@@ -519,77 +514,6 @@ async function saveSimulation() {
   }
 }
 
-function mockRunResult(config: SimulationConfig): SimulationRunResult {
-  const days = Math.max(7, Math.min(45, config.run_request.forecast_days || 21));
-  const totalBudget = config.budget?.total_budget_usd || budget.value;
-  const variantLift = Math.max(1, config.variants.length) * 0.035;
-  const roas = Math.max(1.2, targetRoas.value * (0.86 + variantLift));
-  const dailySpend = totalBudget / days;
-  const rows = Array.from({ length: days }, (_, index) => {
-    const pacing = 0.88 + (index / days) * 0.18 + (index % 4) * 0.015;
-    const spend = dailySpend * pacing;
-    const impressions = spend * 118;
-    const clicks = impressions * (0.012 + variantLift / 20);
-    const conversions = clicks * (0.028 + (selectedAnalysisTab.value === "audience" ? 0.006 : 0.002));
-    const value = spend * roas * (0.94 + (index % 5) * 0.018);
-    const date = new Date(config.run_request.start_date);
-    date.setDate(date.getDate() + index);
-    return {
-      date: date.toISOString().slice(0, 10),
-      metrics: {
-        SPEND: Math.round(spend),
-        IMPRESSIONS: Math.round(impressions),
-        CLICKS_ALL: Math.round(clicks),
-        CTR_ALL: impressions ? (clicks / impressions) * 100 : 0,
-        CONVERSIONS: Math.round(conversions),
-        CONVERSION_VALUE: Math.round(value),
-        ROAS: spend ? value / spend : 0,
-        COST_PER_CONVERSION: conversions ? spend / conversions : 0,
-      },
-      notes: index === 0 ? ["Local forecast generated from selected assets and assumptions."] : undefined,
-    };
-  });
-
-  const winner = config.variants[0]?.variant_id;
-  return {
-    run_id: localId(),
-    analysis_tab: selectedAnalysisTab.value,
-    status: "complete",
-    eval_status: "accepted",
-    forecast_days: days,
-    daily_forecast: rows,
-    summary: `${config.name} is projected to clear ${formatMultiplier(roas, 1)} ROAS with strongest lift from ${selectedAnalysisTab.value} assumptions.`,
-    winner_variant_id: winner,
-    confidence_score: Math.min(0.92, 0.68 + config.variants.length * 0.035),
-    reasoning: [
-      { claim: "Selected assets provide enough creative and campaign context for a directional forecast.", evidence_ids: ["config-assets"] },
-      { claim: "Budget pacing stays within a stable daily spend band.", evidence_ids: ["budget-plan"] },
-    ],
-    assumptions: [
-      "Forecast uses sample performance curves when live simulation services are unavailable.",
-      "Attribution confidence assumes blended paid media and CRM signal coverage.",
-    ],
-    warnings: config.variants.length < 2 ? ["Add at least two variants for stronger winner selection."] : [],
-    evidence: [
-      { id: "config-assets", source: "config", label: `${config.variants.length} selected variants`, confidence: 0.82, data: config.variants },
-      { id: "budget-plan", source: "assumption", label: `${formatCurrency(dailySpend, 0)} daily spend`, confidence: 0.74, data: config.budget },
-    ],
-    step_results: [
-      { step_name: "prepare_config", status: "success", duration_ms: 42, evidence_ids: ["config-assets"], warnings: [] },
-      { step_name: "forecast_outcomes", status: "success", duration_ms: 96, evidence_ids: ["budget-plan"], warnings: [] },
-    ],
-    agent_version: "app2-local-simulation-lab",
-    prompt_version: "mock-friendly-ui",
-    eval_version: "local-v1",
-    source_coverage: {
-      used_config: true,
-      used_integration: false,
-      used_provider_fallback: true,
-      used_assumptions: true,
-    },
-  };
-}
-
 async function runSimulation() {
   running.value = true;
   runResult.value = null;
@@ -997,10 +921,12 @@ watch(
       </main>
 
       <aside class="space-y-4">
-        <!-- Run output: only shown for real API results -->
-        <SurfaceCard v-if="runResult && apiMode === 'api'" variant="depth" padding="sm" class="relative overflow-hidden text-white">
+        <!-- Run output -->
+        <SurfaceCard v-if="runResult" variant="depth" padding="sm" class="relative overflow-hidden text-white">
           <div class="relative">
-            <p class="text-[11px] font-bold uppercase tracking-wide text-white/60">Run output</p>
+            <p class="text-[11px] font-bold uppercase tracking-wide text-white/60">
+              {{ apiMode === 'api' ? (playground.isPlayground.value ? 'Sandbox forecast' : 'Run output') : 'Directional preview' }}
+            </p>
             <h2 class="mt-2 text-2xl font-semibold tracking-tight">
               {{ formatMultiplier(projectedRoas, 1) }}
             </h2>
@@ -1027,13 +953,13 @@ watch(
           <div class="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
         </SurfaceCard>
 
-        <!-- Placeholder when not yet run or not connected -->
+        <!-- Placeholder when not yet run -->
         <SurfaceCard v-else variant="frame" padding="sm" class="border border-black/[0.06]">
           <p class="text-[11px] font-bold uppercase tracking-wide text-black/40">Run output</p>
           <p class="mt-3 text-sm text-black/52">
             <template v-if="creditError">Out of credits — upgrade to run a simulation.</template>
-            <template v-else-if="!canUseApi">Connect to a workspace to run a live simulation.</template>
             <template v-else-if="running">Running…</template>
+            <template v-else-if="apiMode === 'mock'">Save a draft and click Run simulation to see a directional preview.</template>
             <template v-else>Save a draft and click Run simulation to see results here.</template>
           </p>
         </SurfaceCard>

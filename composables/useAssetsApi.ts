@@ -25,7 +25,7 @@ function assetPath(kind: AssetKind) {
 export function useAssetsApi() {
   const api = useApiClient();
   const workspace = useWorkspaceContext();
-  const playground = usePlayground();
+  const playground = useAppData();
 
   function scopeQuery() {
     const ws = workspace.currentWorkspaceId.value?.trim();

@@ -356,73 +356,16 @@ export interface CrmRow {
 // Playground tab bypass shapes (mirrors api/src/types/playground.ts)
 // ---------------------------------------------------------------------------
 
-export interface PlaygroundSpendMetrics {
-  spend: number;
-  revenue: number;
-  conversions: number;
-  roas: number;
-  cac: number;
-}
-
-export interface PlaygroundSpendConnectionSlice {
-  connection_id: string;
-  connection_slug: string;
-  name: string;
-  status: "ok" | "error";
-  metrics: PlaygroundSpendMetrics | null;
-  previous_metrics?: PlaygroundSpendMetrics | null;
-}
-
-export interface PlaygroundSpendSeriesPoint { date: string; spend: number }
-
-export interface PlaygroundSpendConnectionSeries {
-  connection_id: string;
-  connection_slug: string;
-  name: string;
-  points: PlaygroundSpendSeriesPoint[];
-}
-
-export interface PlaygroundSpendData {
-  summary: {
-    days: number;
-    has_spend_connections: boolean;
-    totals: PlaygroundSpendMetrics | null;
-    previous_totals?: PlaygroundSpendMetrics | null;
-    spend_change_pct?: number;
-    revenue_change_pct?: number;
-    roas_change_pct?: number;
-  };
-  by_connection: {
-    days: number;
-    has_spend_connections: boolean;
-    connections: PlaygroundSpendConnectionSlice[];
-  };
-  series: {
-    days: number;
-    has_spend_connections: boolean;
-    points: PlaygroundSpendSeriesPoint[];
-    by_connection: PlaygroundSpendConnectionSeries[];
-  };
-  campaigns: {
-    days: number;
-    has_spend_connections: boolean;
-    campaigns: Array<{
-      id: string;
-      connection_id: string;
-      connection_slug: string;
-      channel: string;
-      name: string;
-      objective: string;
-      spend: number;
-      revenue: number;
-      conversions: number;
-      roas: number;
-      budget: number;
-      pace_pct: number;
-      alert: "Overpacing" | "On plan" | "Underpacing";
-    }>;
-  };
-}
+export type {
+  PlaygroundSpendConnectionSeries,
+  PlaygroundSpendConnectionSlice,
+  PlaygroundSpendData,
+  PlaygroundSpendMetrics,
+  PlaygroundSpendSeriesPoint,
+  SpendCampaignRow,
+  SpendCampaigns,
+  SpendMetrics,
+} from "~/types/spend";
 
 export interface PlaygroundAssetEnvelope {
   id: string;

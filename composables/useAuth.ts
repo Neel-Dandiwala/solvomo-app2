@@ -1,4 +1,4 @@
-import type { BrandProfile, Workspace } from "~/types/app-shell";
+import type { BrandProfile, BrandProfileSocialHandle, Workspace } from "~/types/app-shell";
 import type { OnboardingStepKey } from "~/types/mock";
 import {
   isOnboardingCompleteForSteps,
@@ -22,49 +22,85 @@ type ApiUser = {
   onboarding_steps?: string[];
 };
 
+type ApiBrandProfileSocialHandle = {
+  platform: string;
+  handle?: string;
+  profile_url?: string;
+  connection_id?: string;
+  account_id?: string;
+  page_id?: string;
+  display_name?: string;
+  is_primary?: boolean;
+  follower_count?: number;
+  following_count?: number;
+  page_likes?: number;
+  media_count?: number;
+  is_verified?: boolean;
+  bio?: string;
+  last_fetched_at?: string;
+};
+
+type ApiBrandProfile = {
+  id: string;
+  brand_name?: string;
+  workspace_id?: string;
+  currency?: string;
+  attribution_preference?: string;
+  is_playground_system?: boolean;
+  industry?: string;
+  brand_recognition?: string;
+  website_url?: string;
+  reviews_count?: number;
+  average_rating?: number;
+  trust_signals?: string[];
+  social_handles?: ApiBrandProfileSocialHandle[];
+};
+
 type ApiAuthContext = {
   user?: ApiUser | null;
   workspaces: Workspace[];
-  brandProfiles: Array<
-    Omit<
-      Partial<BrandProfile>,
-      "id" | "workspaceId" | "currency" | "attributionPreference"
-    > & {
-      id: string;
-      name?: string;
-      workspace_id?: string;
-      workspaceId?: string;
-      currency?: string;
-      attribution_preference?: string;
-      attributionPreference?: string;
-      is_playground_system?: boolean;
-      isPlaygroundSystem?: boolean;
-    }
-  >;
+  brand_profiles: ApiBrandProfile[];
 };
 
 let authInitPromise: Promise<void> | null = null;
 
-function normalizeApiBrandProfile(
-  profile: ApiAuthContext["brandProfiles"][number],
-): BrandProfile {
-  const {
-    workspace_id,
-    attribution_preference,
-    is_playground_system,
-    ...rest
-  } = profile;
-
+function mapSocialHandle(handle: ApiBrandProfileSocialHandle): BrandProfileSocialHandle {
   return {
-    ...rest,
+    platform: handle.platform,
+    handle: handle.handle,
+    profileUrl: handle.profile_url,
+    connectionId: handle.connection_id,
+    accountId: handle.account_id,
+    pageId: handle.page_id,
+    displayName: handle.display_name,
+    isPrimary: handle.is_primary,
+    followerCount: handle.follower_count,
+    followingCount: handle.following_count,
+    pageLikes: handle.page_likes,
+    mediaCount: handle.media_count,
+    isVerified: handle.is_verified,
+    bio: handle.bio,
+    lastFetchedAt: handle.last_fetched_at,
+  };
+}
+
+function normalizeApiBrandProfile(profile: ApiBrandProfile): BrandProfile {
+  const name = profile.brand_name?.trim() || "Untitled brand";
+  return {
     id: profile.id,
-    name: profile.name || "Untitled brand",
-    workspaceId: profile.workspaceId || workspace_id || "",
+    name,
+    brandName: name,
+    workspaceId: profile.workspace_id || "",
     currency: profile.currency || "USD",
-    attributionPreference:
-      profile.attributionPreference || attribution_preference || "Multi-touch",
-    isPlaygroundSystem:
-      profile.isPlaygroundSystem ?? is_playground_system ?? false,
+    attributionPreference: profile.attribution_preference || "Multi-touch",
+    isPlaygroundSystem: profile.is_playground_system ?? false,
+    industry: profile.industry,
+    brandRecognition: profile.brand_recognition,
+    websiteUrl: profile.website_url,
+    reviewsCount: profile.reviews_count,
+    averageRating: profile.average_rating,
+    trustSignals: profile.trust_signals,
+    socialHandles: (profile.social_handles || []).map(mapSocialHandle),
   };
 }
 
@@ -101,7 +137,7 @@ export async function hydrateWorkspaceFromApi(ctx?: ApiAuthContext): Promise<voi
   const workspace = useWorkspaceContext();
 
   workspace.workspaces.value = [...context.workspaces];
-  workspace.brandProfiles.value = context.brandProfiles.map(normalizeApiBrandProfile);
+  workspace.brandProfiles.value = (context.brand_profiles || []).map(normalizeApiBrandProfile);
 
   // First, set defaults (first workspace, first non-playground brand)
   const ws0 = context.workspaces[0]?.id || "";
@@ -207,48 +243,6 @@ export function useAuth() {
     await authInitPromise;
   }
 
-  async function login(
-    email: string,
-    password: string,
-  ): Promise<{ ok: true } | { ok: false; message: string }> {
-    try {
-      const data = await fetchApi<{ mfaRequired?: boolean }>("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
-      });
-      if (data.mfaRequired) {
-        return {
-          ok: false,
-          message: "MFA is enabled for this account; use API-only flow.",
-        };
-      }
-      await initializeSession();
-      return { ok: true };
-    } catch {
-      return { ok: false, message: "Try again." };
-    }
-  }
-
-  async function signup(payload: {
-    email: string;
-    password: string;
-    name: string;
-  }): Promise<{ ok: true } | { ok: false; message: string }> {
-    try {
-      await fetchApi<{ ok: true }>("/auth/register", {
-        method: "POST",
-        body: JSON.stringify({
-          email: payload.email.trim().toLowerCase(),
-          password: payload.password,
-          name: payload.name.trim() || undefined,
-        }),
-      });
-      return login(payload.email, payload.password);
-    } catch {
-      return { ok: false, message: "Try again." };
-    }
-  }
-
   async function logout() {
     try {
       await fetchApi<{ ok: true }>("/auth/logout", { method: "POST" });
@@ -294,8 +288,6 @@ export function useAuth() {
     ensureHydrated: initializeSession,
     restoreSession: initializeSession,
     initializeSession,
-    login,
-    signup,
     logout,
     completeOnboardingStep,
     nextOnboardingPath,
