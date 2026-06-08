@@ -1,3 +1,4 @@
+import { getPlaygroundExampleAssets } from "~/data/playground-example-assets";
 import { brandScopeQuery } from "~/utils/apiScope";
 
 export type AssetKind =
@@ -16,6 +17,14 @@ export type AssetEnvelope = {
   brandprofile_id?: string;
   created_at?: string;
   updated_at?: string;
+  asset_url?: string | null;
+  format?: string;
+  platform?: string;
+  headline?: string | null;
+  label?: string;
+  parent_creative_id?: string;
+  slot_key?: string;
+  object_type?: string;
 };
 
 function assetPath(kind: AssetKind) {
@@ -35,8 +44,10 @@ export function useAssetsApi() {
   }
 
   async function list<T extends AssetEnvelope>(kind: AssetKind): Promise<T[]> {
-    if (playground.isPlayground.value && playground.assetsData.value) {
-      return (playground.assetsData.value[kind] ?? []) as unknown as T[];
+    if (playground.isPlayground.value) {
+      const fromBundle = playground.assetsData.value?.[kind];
+      if (fromBundle?.length) return fromBundle as unknown as T[];
+      return getPlaygroundExampleAssets(kind) as unknown as T[];
     }
     return api.getJson<T[]>(`${assetPath(kind)}${scopeQuery()}`);
   }
@@ -46,6 +57,9 @@ export function useAssetsApi() {
   }
 
   async function create<T>(kind: AssetKind, body: Record<string, unknown>): Promise<T> {
+    if (playground.isPlayground.value) {
+      throw new Error("Assets cannot be created in the Playground brand profile.");
+    }
     return api.postJson<T>(assetPath(kind), body);
   }
 
@@ -54,6 +68,9 @@ export function useAssetsApi() {
     id: string,
     name: string,
   ): Promise<T> {
+    if (playground.isPlayground.value) {
+      throw new Error("Assets cannot be duplicated in the Playground brand profile.");
+    }
     return api.postJson<T>(
       `${assetPath(kind)}/${encodeURIComponent(id)}/duplicate`,
       { name },
@@ -61,6 +78,9 @@ export function useAssetsApi() {
   }
 
   async function archive(kind: AssetKind, id: string): Promise<void> {
+    if (playground.isPlayground.value) {
+      throw new Error("Assets cannot be archived in the Playground brand profile.");
+    }
     await api.patchJson(`${assetPath(kind)}/${encodeURIComponent(id)}/archive`, {});
   }
 

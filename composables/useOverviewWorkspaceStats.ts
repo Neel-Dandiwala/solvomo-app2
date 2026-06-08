@@ -41,10 +41,12 @@ import { workspaceScopeQuery } from "~/utils/apiScope";
 
 /**
  * Workspace overview metrics from `/overview/*?workspace_id=`.
+ * In playground mode data is served from the pre-bundled `overview_stats` without any API calls.
  */
 export function useOverviewWorkspaceStats() {
   const api = useApiClient();
   const workspace = useWorkspaceContext();
+  const playground = useAppData();
 
   const credit = ref<CreditOverview | null>(null);
   const connections = ref<ConnectionsOverview | null>(null);
@@ -60,6 +62,18 @@ export function useOverviewWorkspaceStats() {
   }
 
   async function refresh(options?: { days?: number }) {
+    // Playground bypass: serve pre-bundled stats, no API call.
+    if (playground.isPlayground.value && playground.overviewStats.value) {
+      const pg = playground.overviewStats.value;
+      credit.value = pg.credit;
+      connections.value = pg.connections;
+      storage.value = pg.storage;
+      creditUsage.value = pg.credit_usage;
+      loading.value = false;
+      error.value = null;
+      return;
+    }
+
     const qs = workspaceQuery();
     const days = options?.days ?? 30;
 
@@ -74,12 +88,14 @@ export function useOverviewWorkspaceStats() {
     loading.value = true;
     error.value = null;
     try {
-      const [creditRes, connectionsRes, storageRes, usageRes] = await Promise.all([
-        api.getJson<CreditOverview>(`/overview/credit${qs}`),
-        api.getJson<ConnectionsOverview>(`/overview/connections${qs}`),
-        api.getJson<StorageOverview>(`/overview/storage${qs}`),
-        api.getJson<CreditUsageSeries>(`/overview/credit/usage${qs}&days=${days}`),
-      ]);
+      const creditRes = await api.getJson<CreditOverview>(`/overview/credit${qs}`);
+      const connectionsRes = await api.getJson<ConnectionsOverview>(
+        `/overview/connections${qs}`,
+      );
+      const storageRes = await api.getJson<StorageOverview>(`/overview/storage${qs}`);
+      const usageRes = await api.getJson<CreditUsageSeries>(
+        `/overview/credit/usage${qs}&days=${days}`,
+      );
       credit.value = {
         ...creditRes,
         top_usage_categories: creditRes.top_usage_categories ?? [],

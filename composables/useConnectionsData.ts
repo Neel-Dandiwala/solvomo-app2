@@ -11,7 +11,6 @@ export function useConnectionsData() {
   const auth = useAuth();
   const api = useApiClient();
   const config = useRuntimeConfig();
-  const workspace = useWorkspaceContext();
 
   const manifest = useState<ConnectionsManifest | null>("sv-connections-manifest", () => null);
   const manifestLoaded = useState<boolean>("sv-connections-manifest-loaded", () => false);
@@ -77,14 +76,6 @@ export function useConnectionsData() {
   }
 
   async function refreshUserConnections(options?: { force?: boolean }) {
-    // Playground bypass: user connections will be populated by the useAppData bundle watcher.
-    // Skip API call to avoid returning empty connections for the demo account.
-    if (workspace.isPlayground.value) {
-      userConnectionsLoaded.value = true;
-      userConnectionsLoading.value = false;
-      return userConnections.value;
-    }
-
     const force = options?.force === true;
     if (!auth.isAuthenticated.value || !api.hasBase.value) {
       userConnections.value = [];
@@ -116,10 +107,8 @@ export function useConnectionsData() {
   }
 
   async function refreshConnectionsData(options?: { force?: boolean }) {
-    await Promise.all([
-      refreshManifest(options),
-      refreshUserConnections(options),
-    ]);
+    await refreshManifest(options);
+    await refreshUserConnections(options);
   }
 
   if (!autoRefreshInitialized) {
@@ -140,10 +129,9 @@ export function useConnectionsData() {
     );
   }
 
-  const hasActiveConnections = computed(() => {
-    if (workspace.isPlayground.value) return true;
-    return userConnections.value.some((c) => c.is_active);
-  });
+  const hasActiveConnections = computed(() =>
+    userConnections.value.some((c) => c.is_active),
+  );
 
   function integrationBySlug(slug: string) {
     return integrationForSlug(manifest.value?.integrations, slug);

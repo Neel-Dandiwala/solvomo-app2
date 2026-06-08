@@ -206,6 +206,7 @@ export interface SimulationPersistBody {
   offer?: SimulationOfferConfig;
   target_metrics?: Partial<Record<SimulationMetricKey, number>>;
   output_metrics: SimulationMetricKey[];
+  bid_strategy?: SimulationBidStrategy;
   run_request: SimulationRunRequest;
   evolve_status?: SimulationEvolveStatus;
 }

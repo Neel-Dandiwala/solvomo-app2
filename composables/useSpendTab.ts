@@ -73,12 +73,16 @@ export function useSpendTab() {
     loading.value = true;
     error.value = null;
     try {
-      const [summaryRes, connectionsRes, seriesRes, campaignsRes] = await Promise.all([
-        api.getJson<SpendSummary>(`/spend/summary${qs}&days=${days}${compareQ}`),
-        api.getJson<SpendByConnection>(`/spend/connections${qs}&days=${days}${compareQ}`),
-        api.getJson<SpendSeries>(`/spend/series${qs}&days=${days}`),
-        api.getJson<SpendCampaigns>(`/spend/campaigns${qs}&days=${days}`),
-      ]);
+      const summaryRes = await api.getJson<SpendSummary>(
+        `/spend/summary${qs}&days=${days}${compareQ}`,
+      );
+      const connectionsRes = await api.getJson<SpendByConnection>(
+        `/spend/connections${qs}&days=${days}${compareQ}`,
+      );
+      const seriesRes = await api.getJson<SpendSeries>(`/spend/series${qs}&days=${days}`);
+      const campaignsRes = await api.getJson<SpendCampaigns>(
+        `/spend/campaigns${qs}&days=${days}`,
+      );
       summary.value = summaryRes;
       byConnection.value = connectionsRes;
       series.value = seriesRes;

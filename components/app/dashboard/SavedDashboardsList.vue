@@ -66,7 +66,7 @@ const emit = defineEmits<{
             <LayoutDashboard class="h-4 w-4 text-[rgba(55,70,130,0.88)]" :stroke-width="1.9" />
           </div>
           <Star
-            v-if="view.isDefault"
+            v-if="view.is_default"
             class="h-3.5 w-3.5 shrink-0 text-amber-500"
             :stroke-width="2"
             fill="currentColor"
@@ -79,7 +79,7 @@ const emit = defineEmits<{
           {{ view.description }}
         </p>
         <p class="mt-3 text-[11px] text-black/40">
-          {{ view.widgetCount }} widgets · {{ view.datasourceCount }} sources
+          {{ view.widget_count }} widgets · {{ view.datasource_count }} sources
         </p>
       </button>
     </div>

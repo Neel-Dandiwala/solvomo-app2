@@ -14,6 +14,7 @@ export function useDashboardTab() {
   const api = useApiClient();
   const auth = useAuth();
   const workspace = useWorkspaceContext();
+  const { userConnections } = useConnectionsData();
 
   const views = useState<DashboardViewListItem[]>("sv-dashboard-tab-views", () => []);
   const templates = useState<DashboardTemplateSuggestion[]>(
@@ -26,6 +27,7 @@ export function useDashboardTab() {
   const loading = useState("sv-dashboard-tab-loading", () => false);
   const error = useState<string | null>("sv-dashboard-tab-error", () => null);
   const loaded = useState("sv-dashboard-tab-loaded", () => false);
+  const loadedScopeKey = useState<string>("sv-dashboard-tab-loaded-scope", () => "");
 
   function scopeQuery() {
     const ws = workspace.currentWorkspaceId.value?.trim();
@@ -34,12 +36,19 @@ export function useDashboardTab() {
     return brandScopeQuery(ws, bp);
   }
 
+  function scopeKey() {
+    const ws = workspace.currentWorkspaceId.value?.trim();
+    const bp = workspace.currentBrandProfileId.value?.trim();
+    return ws && bp ? `${ws}:${bp}` : "";
+  }
+
   function applyHome(data: DashboardHomeResponse) {
     views.value = data.views || [];
     templates.value = data.templates || [];
     connectedSlugs.value = data.connected_slugs || [];
     hasConnections.value = Boolean(data.has_connections);
     aiEnabled.value = Boolean(data.ai_enabled);
+    loadedScopeKey.value = scopeKey();
     loaded.value = true;
   }
 
@@ -57,9 +66,13 @@ export function useDashboardTab() {
     if (!qs) {
       views.value = [];
       templates.value = [];
+      loaded.value = false;
+      loadedScopeKey.value = "";
       return;
     }
-    if (loaded.value && !options?.force) return;
+    if (loaded.value && loadedScopeKey.value === scopeKey() && !options?.force) {
+      return;
+    }
 
     loading.value = true;
     error.value = null;
@@ -127,7 +140,16 @@ export function useDashboardTab() {
 
   watch(
     () =>
-      [auth.isAuthenticated.value, workspace.currentWorkspaceId.value, workspace.currentBrandProfileId.value] as const,
+      [
+        auth.isAuthenticated.value,
+        workspace.currentWorkspaceId.value,
+        workspace.currentBrandProfileId.value,
+        userConnections.value
+          .filter((connection) => connection.is_active)
+          .map((connection) => `${connection.connection_slug}:${connection.id}`)
+          .sort()
+          .join("|"),
+      ] as const,
     () => {
       loaded.value = false;
       void refresh({ force: true });

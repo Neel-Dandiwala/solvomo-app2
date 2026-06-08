@@ -2,6 +2,7 @@ import { createProductionPlaceholder } from "~/data/production-placeholder";
 import type {
   MockConnection,
   PlaygroundAssetsData,
+  PlaygroundOverviewStats,
   PlaygroundPayload,
   PlaygroundSimulationData,
   PlaygroundSpendData,
@@ -31,7 +32,11 @@ export function useAppData() {
   const workspace = useWorkspaceContext();
   const api = useApiClient();
 
-  const playgroundPayload = ref<PlaygroundPayload | null>(null);
+  // useState shares the same ref across every component/composable that calls
+  // useAppData() — no duplicate fetches, instant reactivity for all callers.
+  const playgroundPayload = useState<PlaygroundPayload | null>("sv-pg-payload", () => null);
+  const pgFetching = useState<boolean>("sv-pg-fetching", () => false);
+
   const {
     userConnections,
     refreshUserConnections,
@@ -40,20 +45,26 @@ export function useAppData() {
 
   watchEffect(async () => {
     const s = auth.session.value;
-    if (
-      !s ||
-      !api.hasBase.value ||
-      !workspace.isPlayground.value ||
-      !workspace.currentBrandProfile.value?.isPlaygroundSystem
-    ) {
+    const shouldLoad =
+      !!s &&
+      api.hasBase.value &&
+      workspace.isPlayground.value &&
+      !!workspace.currentBrandProfile.value?.isPlaygroundSystem;
+
+    if (!shouldLoad) {
+      pgFetching.value = false;
       playgroundPayload.value = null;
       return;
     }
+    if (playgroundPayload.value !== null || pgFetching.value) return;
+    pgFetching.value = true;
     try {
       const res = await api.getJson<{ payload: PlaygroundPayload }>("/auth/playground/bundle");
       playgroundPayload.value = res.payload ?? null;
     } catch {
       playgroundPayload.value = null;
+    } finally {
+      pgFetching.value = false;
     }
   });
 
@@ -79,18 +90,6 @@ export function useAppData() {
     () => !!workspace.currentWorkspace.value && !!workspace.currentBrandProfile.value,
   );
 
-  // Sync playground connectionsShell → userConnections global state so that
-  // hasActiveConnections and any other consumer of userConnections is accurate.
-  watchEffect(() => {
-    if (workspace.isPlayground.value && bundle.value?.connectionsShell) {
-      userConnections.value = bundle.value.connectionsShell.map((conn) => ({
-        id: conn.id,
-        connection_slug: conn.id,
-        is_active: conn.status === "connected",
-      }));
-    }
-  });
-
   const dataStatus = computed<"ready" | "missing_session" | "missing_scope">(() => {
     if (!hasBundle.value) return "missing_session";
     if (!hasWorkspaceScope.value) return "missing_scope";
@@ -115,6 +114,10 @@ export function useAppData() {
     bundle.value?.connectionsShell ?? [],
   );
 
+  const overviewStats = computed((): PlaygroundOverviewStats | null =>
+    bundle.value?.overview_stats ?? null,
+  );
+
   return {
     bundle,
     dataStatus,
@@ -129,5 +132,6 @@ export function useAppData() {
     assetsData,
     simulationData,
     connectionsShell,
+    overviewStats,
   };
 }

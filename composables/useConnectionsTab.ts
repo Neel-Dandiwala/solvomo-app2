@@ -20,14 +20,14 @@ export interface ConnectionsDirectoryResponse {
 
 /**
  * Connections tab: registry integrations + per-brand active status.
- * In playground mode the directory is served from the bundle's `connectionsShell` without API calls.
+ * Playground brand profiles use one-click activation stored as real Connection rows.
  */
 export function useConnectionsTab() {
   const api = useApiClient();
   const auth = useAuth();
   const config = useRuntimeConfig();
   const workspace = useWorkspaceContext();
-  const playground = useAppData();
+  const { integrationBySlug, refreshManifest } = useConnectionsData();
 
   const directory = ref<ConnectionsDirectoryResponse | null>(null);
   const loading = ref(false);
@@ -67,25 +67,6 @@ export function useConnectionsTab() {
   }
 
   async function refresh(options?: { force?: boolean }) {
-    // Playground bypass: serve connectionsShell as a read-only directory.
-    if (playground.isPlayground.value) {
-      const shell = playground.connectionsShell.value;
-      directory.value = {
-        integrations: shell.map((conn) => ({
-          slug: conn.id,
-          name: conn.name,
-          description: conn.description,
-          categories: [],
-          is_active: conn.status === "connected",
-          connection_id: conn.status === "connected" ? conn.id : undefined,
-          integration: {} as IntegrationManifestEntry,
-        })),
-      };
-      loading.value = false;
-      error.value = null;
-      return;
-    }
-
     if (!auth.isAuthenticated.value || !api.hasBase.value) {
       directory.value = await loadPublicManifest();
       error.value = directory.value ? null : "Could not load integrations.";
@@ -102,9 +83,17 @@ export function useConnectionsTab() {
     loading.value = true;
     error.value = null;
     try {
-      directory.value = await api.getJson<ConnectionsDirectoryResponse>(
+      await refreshManifest();
+      const data = await api.getJson<ConnectionsDirectoryResponse>(
         `/connections/directory${qs}`,
       );
+      directory.value = {
+        integrations: (data.integrations ?? []).map((item) => ({
+          ...item,
+          integration:
+            integrationBySlug(item.slug) ?? ({} as IntegrationManifestEntry),
+        })),
+      };
     } catch (e) {
       directory.value = null;
       error.value = e instanceof Error ? e.message : "Failed to load connections";
@@ -120,7 +109,7 @@ export function useConnectionsTab() {
         api.hasBase.value,
         workspace.currentWorkspaceId.value,
         workspace.currentBrandProfileId.value,
-        playground.isPlayground.value,
+        workspace.isPlayground.value,
       ] as const,
     () => {
       void refresh();

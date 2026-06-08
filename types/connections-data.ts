@@ -2,6 +2,7 @@ export interface ConnectionRow {
   id: string;
   connection_slug: string;
   is_active: boolean;
+  is_playground?: boolean;
   /** Vendor OAuth/API tier (e.g. production Graph URLs). */
   vendor_environment?: string;
   brandprofile_id?: string;

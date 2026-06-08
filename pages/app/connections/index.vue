@@ -16,6 +16,7 @@ const workspace = useWorkspaceContext();
 const playground = useAppData();
 const { integrations, loading, error: directoryError, refresh: refreshDirectory } =
   useConnectionsTab();
+const { refreshUserConnections } = useConnectionsData();
 
 const VENDOR_APP_OAUTH_SLUGS = new Set(["metaads", "instagram", "tiktok"]);
 
@@ -51,7 +52,34 @@ function credentialRows(item: ConnectionsDirectoryItem) {
   return rows.filter((c) => c.key !== "client_id" && c.key !== "client_secret");
 }
 
+async function activatePlayground(item: ConnectionsDirectoryItem) {
+  actionError.value = null;
+  const slug = item.slug.trim();
+  const workspaceId = workspace.currentWorkspaceId.value?.trim();
+  const brandprofileId = workspace.currentBrandProfileId.value?.trim();
+  if (!slug || !workspaceId || !brandprofileId || !api.hasBase.value) return;
+
+  connectBusySlug.value = slug;
+  try {
+    await api.postJson("/auth/connections/playground/activate", {
+      connection_slug: slug,
+      workspace_id: workspaceId,
+      brandprofile_id: brandprofileId,
+    });
+    await refreshDirectory();
+    await refreshUserConnections({ force: true });
+  } catch {
+    actionError.value = "Could not activate this integration. Please try again.";
+  } finally {
+    connectBusySlug.value = null;
+  }
+}
+
 async function connect(item: ConnectionsDirectoryItem) {
+  if (playground.isPlayground.value) {
+    await activatePlayground(item);
+    return;
+  }
   actionError.value = null;
   const slug = item.slug.trim();
   if (!slug || !api.hasBase.value) return;
@@ -103,7 +131,29 @@ async function connect(item: ConnectionsDirectoryItem) {
   }
 }
 
+async function deactivatePlayground(item: ConnectionsDirectoryItem) {
+  actionError.value = null;
+  const connectionId = item.connection_id?.trim();
+  if (!connectionId) return;
+  deactivateBusyId.value = connectionId;
+  try {
+    await api.deleteRequest(
+      `/auth/connections/playground/${encodeURIComponent(connectionId)}`,
+    );
+    await refreshDirectory();
+    await refreshUserConnections({ force: true });
+  } catch {
+    actionError.value = "Could not deactivate this integration. Please try again.";
+  } finally {
+    deactivateBusyId.value = null;
+  }
+}
+
 async function deactivate(item: ConnectionsDirectoryItem) {
+  if (playground.isPlayground.value) {
+    await deactivatePlayground(item);
+    return;
+  }
   actionError.value = null;
   const connectionId = item.connection_id?.trim();
   if (!connectionId) return;
@@ -119,14 +169,19 @@ async function deactivate(item: ConnectionsDirectoryItem) {
 }
 
 function canConnect(item: ConnectionsDirectoryItem): boolean {
-  if (playground.isPlayground.value) return false;
   return Boolean(loggedIn.value && api.hasBase.value && !item.is_active);
 }
 
 function canDeactivate(item: ConnectionsDirectoryItem): boolean {
-  if (playground.isPlayground.value) return false;
   return Boolean(loggedIn.value && api.hasBase.value && item.is_active && item.connection_id);
 }
+
+const connectLabel = computed(() =>
+  playground.isPlayground.value ? "Activate" : "Connect",
+);
+const connectBusyLabel = computed(() =>
+  playground.isPlayground.value ? "Activating…" : "Starting…",
+);
 
 watch(
   () => route.query.connected,
@@ -143,7 +198,11 @@ watch(
       dense
       metadata-tight
       hide-context
-      description="Connect data sources for this brand."
+      :description="
+        playground.isPlayground
+          ? 'Activate integrations to explore the platform with sample data — no sign-in required.'
+          : 'Connect data sources for this brand.'
+      "
     />
 
     <SurfaceCard
@@ -269,6 +328,8 @@ watch(
           :logo-src="connectorLogoUrl(item.logo_file)"
           :can-connect="canConnect(item)"
           :can-deactivate="canDeactivate(item)"
+          :connect-label="connectLabel"
+          :connect-busy-label="connectBusyLabel"
           :connect-busy="connectBusySlug === item.slug"
           :deactivate-busy="deactivateBusyId === item.connection_id"
           :show-sign-in-hint="!loggedIn || !api.hasBase"

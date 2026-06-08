@@ -12,6 +12,17 @@ const {
 const brandOpen = ref(false);
 const brandRoot = ref<HTMLElement | null>(null);
 
+function switchBrandProfile(id: string) {
+  if (id === currentBrandProfile.value?.id) {
+    brandOpen.value = false;
+    return;
+  }
+  setBrandProfile(id);
+  brandOpen.value = false;
+  // Full reload so all tab data is re-fetched for the new brand.
+  window.location.reload();
+}
+
 function onBrandDocClick(e: MouseEvent) {
   if (!brandOpen.value || !brandRoot.value) return;
   if (!brandRoot.value.contains(e.target as Node)) brandOpen.value = false;
@@ -74,7 +85,7 @@ onUnmounted(() => document.removeEventListener("click", onBrandDocClick));
                 type="button"
                 class="flex w-full flex-col rounded-xl px-3 py-2.5 text-left text-sm hover:bg-black/[0.03]"
                 :class="b.id === currentBrandProfile?.id ? 'bg-black/[0.035] font-semibold' : ''"
-                @click="setBrandProfile(b.id); brandOpen = false"
+                @click="switchBrandProfile(b.id)"
               >
                 <span class="text-[0.95rem] text-black">{{ b.name }}</span>
                 <span

@@ -3,7 +3,8 @@ import IntegrationLogo from "~/components/app/integrations/IntegrationLogo.vue";
 import type { ConnectionsDirectoryItem } from "~/composables/useConnectionsTab";
 import { directoryCategoryTags } from "~/utils/connectionCategories";
 
-const props = defineProps<{
+const props = withDefaults(
+  defineProps<{
   item: ConnectionsDirectoryItem;
   logoSrc?: string;
   connectBusy?: boolean;
@@ -11,7 +12,14 @@ const props = defineProps<{
   canConnect: boolean;
   canDeactivate: boolean;
   showSignInHint?: boolean;
-}>();
+  connectLabel?: string;
+  connectBusyLabel?: string;
+}>(),
+  {
+    connectLabel: "Connect",
+    connectBusyLabel: "Starting…",
+  },
+);
 
 const emit = defineEmits<{
   connect: [];
@@ -75,7 +83,7 @@ const displayCategories = computed(() =>
         :disabled="connectBusy"
         @click="emit('connect')"
       >
-        {{ connectBusy ? "Starting…" : "Connect" }}
+        {{ connectBusy ? connectBusyLabel : connectLabel }}
       </button>
       <span
         v-else-if="showSignInHint"

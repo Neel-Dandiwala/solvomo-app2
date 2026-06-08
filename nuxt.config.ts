@@ -4,6 +4,7 @@ import { vueRouterDevtoolsNullGuard } from "./vite/vue-router-devtools-null-guar
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
+  components: [{ path: "~/components", pathPrefix: false }],
   runtimeConfig: {
     apiProxyTarget:
       process.env.NUXT_API_PROXY_TARGET?.trim() || "http://localhost:8000",

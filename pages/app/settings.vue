@@ -1,35 +1,12 @@
 <script setup lang="ts">
-import type { DataTableColumn } from "~/types/app-shell";
-import { settingsApiKeys, settingsWorkspaceMembers } from "~/data/settingsPageData";
-
 definePageMeta({ layout: "app" });
 
 useHead({ title: "Settings — Solvomo" });
 
 const auth = useAuth();
-const { currentWorkspace, currentBrandProfile, isPlayground } = useWorkspaceContext();
+const { currentWorkspace, currentBrandProfile } = useWorkspaceContext();
 
 const section = ref<"user" | "workspace" | "brand" | "members" | "api">("user");
-
-const memberColumns: DataTableColumn[] = [
-  { key: "name", label: "Name" },
-  { key: "email", label: "Email" },
-  { key: "role", label: "Role" },
-  { key: "lastActive", label: "Last active" },
-  { key: "status", label: "Status" },
-];
-
-const memberRows = computed(() => settingsWorkspaceMembers as unknown as Record<string, unknown>[]);
-
-const apiKeyColumns: DataTableColumn[] = [
-  { key: "name", label: "Key" },
-  { key: "prefix", label: "Prefix" },
-  { key: "scope", label: "Scope" },
-  { key: "created", label: "Created" },
-  { key: "lastUsed", label: "Last used" },
-];
-
-const apiKeyRows = computed(() => settingsApiKeys as unknown as Record<string, unknown>[]);
 
 const navSections = [
   {
@@ -159,30 +136,7 @@ const navSections = [
           <p class="mt-1 text-sm text-black/50">
             Collaborators in this workspace.
           </p>
-          <template v-if="isPlayground">
-            <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
-              <p class="sv-section-title">
-                Directory
-              </p>
-              <button type="button" class="button-secondary rounded-xl px-4 py-2 text-sm font-semibold">
-                Invite member
-              </button>
-            </div>
-            <div class="mt-4">
-              <DataTable :columns="memberColumns" :rows="memberRows" row-key="id" embed>
-                <template #cell-status="{ value }">
-                  <StatusBadge
-                    :label="value === 'invited' ? 'Invited' : 'Active'"
-                    :variant="value === 'invited' ? 'pending' : 'success'"
-                  />
-                </template>
-              </DataTable>
-            </div>
-            <p class="mt-4 text-[12px] text-black/45">
-              Seats and SSO roles sync when your identity provider is connected. Until then, this list is workspace-managed.
-            </p>
-          </template>
-          <div v-else class="mt-6 rounded-2xl border border-dashed border-black/12 bg-black/[0.015] p-6 text-sm text-black/45">
+          <div class="mt-6 rounded-2xl border border-dashed border-black/12 bg-black/[0.015] p-6 text-sm text-black/45">
             Member management is coming soon. Invite links and SSO sync will appear here.
           </div>
         </template>
@@ -194,24 +148,8 @@ const navSections = [
           <p class="mt-1 text-sm text-black/50">
             Programmatic access scoped to this workspace.
           </p>
-          <template v-if="isPlayground">
-            <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
-              <p class="sv-section-title">
-                Issued keys
-              </p>
-              <button type="button" class="button-primary rounded-xl px-4 py-2 text-sm font-semibold text-white">
-                Create API key
-              </button>
-            </div>
-            <div class="mt-4">
-              <DataTable :columns="apiKeyColumns" :rows="apiKeyRows" row-key="id" embed />
-            </div>
-            <p class="mt-4 text-[12px] text-black/45">
-              Rotate keys from this list; audit logs retain the last 90 days of usage.
-            </p>
-          </template>
-          <div v-else class="mt-6 rounded-2xl border border-dashed border-black/12 bg-black/[0.015] p-6 text-sm text-black/45">
-            API key management is not yet available. Keys and scopes will appear here once enabled for your workspace.
+          <div class="mt-6 rounded-2xl border border-dashed border-black/12 bg-black/[0.015] p-6 text-sm text-black/45">
+            API key management is coming soon. Keys and scopes will appear here once enabled for your workspace.
           </div>
         </template>
 

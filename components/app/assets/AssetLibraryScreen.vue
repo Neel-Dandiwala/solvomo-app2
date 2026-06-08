@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Archive, Copy, Plus } from "lucide-vue-next";
+import { Archive, Copy, Lock, Plus } from "lucide-vue-next";
 import type { AssetEnvelope, AssetKind } from "~/composables/useAssetsApi";
 
 const props = defineProps<{
@@ -11,6 +11,7 @@ const props = defineProps<{
 
 const assetsApi = useAssetsApi();
 const workspace = useWorkspaceContext();
+const playground = useAppData();
 
 const items = ref<AssetEnvelope[]>([]);
 const loading = ref(false);
@@ -54,7 +55,11 @@ async function onDuplicate(row: AssetEnvelope) {
 
 onMounted(refresh);
 watch(
-  () => [workspace.currentWorkspaceId.value, workspace.currentBrandProfileId.value],
+  () => [
+    workspace.currentWorkspaceId.value,
+    workspace.currentBrandProfileId.value,
+    playground.assetsData.value,
+  ],
   refresh,
 );
 </script>
@@ -67,7 +72,7 @@ watch(
         <p class="sv-page-subtitle mt-1 max-w-2xl">{{ description }}</p>
       </motion.div>
       <div class="flex gap-2">
-        <button type="button" class="app-button button-secondary text-sm" @click="refresh">
+        <button v-if="!playground.isPlayground.value" type="button" class="app-button button-secondary text-sm" @click="refresh">
           Refresh
         </button>
         <NuxtLink to="/app/simulation" class="app-button button-primary text-sm inline-flex items-center gap-2">
@@ -77,6 +82,17 @@ watch(
       </div>
     </header>
 
+    <!-- Playground read-only banner -->
+    <div v-if="playground.isPlayground.value" class="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+      <Lock class="mt-0.5 h-4 w-4 shrink-0 text-amber-600" :stroke-width="2" />
+      <div>
+        <p class="text-[13px] font-semibold text-amber-800">Playground — read-only assets</p>
+        <p class="mt-0.5 text-[12px] text-amber-700">
+          These are example creatives built into the Playground brand profile. Switch to a production brand profile to upload, archive, or duplicate assets.
+        </p>
+      </div>
+    </div>
+
     <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
     <p v-else-if="loading" class="sv-meta">Loading…</p>
 
@@ -85,9 +101,9 @@ watch(
       <table v-else class="w-full text-left text-sm">
         <thead class="border-b border-black/8 bg-black/[0.02]">
           <tr>
-            <th class="px-4 py-3 font-semibold">Name</th>
+            <th class="px-4 py-3 font-semibold">Creative</th>
+            <th class="px-4 py-3 font-semibold">Format</th>
             <th class="px-4 py-3 font-semibold">Source</th>
-            <th class="px-4 py-3 font-semibold">Status</th>
             <th class="px-4 py-3 font-semibold">Updated</th>
             <th class="px-4 py-3 font-semibold text-right">Actions</th>
           </tr>
@@ -98,12 +114,35 @@ watch(
             :key="row.id"
             class="border-b border-black/6 last:border-0"
           >
-            <td class="px-4 py-3 font-medium">{{ row.name }}</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <div class="h-12 w-9 shrink-0 overflow-hidden rounded-lg border border-black/[0.08] bg-black/[0.03]">
+                  <img
+                    v-if="row.asset_url"
+                    :src="row.asset_url"
+                    :alt="row.name"
+                    class="h-full w-full object-cover"
+                  />
+                </div>
+                <div class="min-w-0">
+                  <p class="truncate font-semibold text-black">{{ row.name }}</p>
+                  <p v-if="row.label || row.headline" class="truncate text-[11px] text-black/40">
+                    {{ [row.label, row.headline].filter(Boolean).join(" · ") }}
+                  </p>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3 sv-meta">{{ [row.format, row.platform].filter(Boolean).join(" · ") || "—" }}</td>
             <td class="px-4 py-3 sv-meta">{{ row.source_type }}</td>
-            <td class="px-4 py-3 sv-meta">{{ row.status }}</td>
             <td class="px-4 py-3 sv-meta">{{ row.updated_at?.slice(0, 10) || "—" }}</td>
             <td class="px-4 py-3 text-right">
-              <motion.div class="flex justify-end gap-2">
+              <template v-if="playground.isPlayground.value">
+                <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                  <Lock class="h-3 w-3" :stroke-width="2" />
+                  Example
+                </span>
+              </template>
+              <motion.div v-else class="flex justify-end gap-2">
                 <button
                   type="button"
                   class="app-button button-secondary text-xs inline-flex items-center gap-1"

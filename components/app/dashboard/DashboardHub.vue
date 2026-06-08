@@ -2,7 +2,6 @@
 import SavedDashboardsList from "~/components/app/dashboard/SavedDashboardsList.vue";
 import ConnectionEmptyState from "~/components/app/overview/ConnectionEmptyState.vue";
 import AiViewBuilderPanel from "~/components/app/overview/AiViewBuilderPanel.vue";
-import SuggestedTemplatesGrid from "~/components/app/overview/SuggestedTemplatesGrid.vue";
 
 const router = useRouter();
 const {
@@ -19,9 +18,7 @@ const {
 const aiPrompt = ref("");
 const aiBusy = ref(false);
 const aiError = ref<string | null>(null);
-const selectedTemplateId = ref<string | null>(null);
 const templatesLoading = computed(() => loading.value);
-const templatesError = computed(() => error.value);
 
 const showConnectionEmptyState = computed(
   () => !loading.value && !hasConnections.value && views.value.length === 0,
@@ -39,15 +36,6 @@ function focusAiCreate() {
   });
 }
 
-async function createFromTemplate(templateId: string) {
-  const template = templates.value.find((item) => item.id === templateId);
-  selectedTemplateId.value = templateId;
-  aiPrompt.value = template
-    ? `Create ${template.title} dashboard using the available integrations.`
-    : aiPrompt.value;
-  await runAiGeneration("create");
-}
-
 async function runAiGeneration(mode: "create" | "modify") {
   const prompt = aiPrompt.value.trim();
   if (!prompt) {
@@ -57,17 +45,15 @@ async function runAiGeneration(mode: "create" | "modify") {
   aiBusy.value = true;
   aiError.value = null;
   try {
-    const view = await generateDashboard({
-      prompt,
-      mode,
-      template_id: selectedTemplateId.value || undefined,
-    });
+    const view = await generateDashboard({ prompt, mode });
     await refreshViews();
     aiPrompt.value = "";
-    selectedTemplateId.value = null;
     openView(view.id);
-  } catch {
-    aiError.value = "Could not generate this dashboard.";
+  } catch (e) {
+    aiError.value =
+      e instanceof Error && e.message
+        ? e.message
+        : "Could not generate this dashboard.";
   } finally {
     aiBusy.value = false;
   }
@@ -107,31 +93,23 @@ onMounted(() => {
         @create="focusAiCreate"
       />
 
-      <section class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.42fr)]">
-        <SuggestedTemplatesGrid
+      <motion.div
+        id="dashboard-ai-panel"
+        :initial="{ opacity: 0, y: 10 }"
+        :animate="{ opacity: 1, y: 0 }"
+        :transition="{ duration: 0.3, delay: 0.1 }"
+      >
+        <AiViewBuilderPanel
+          :prompt="aiPrompt"
           :templates="templates"
-          :loading="templatesLoading"
-          :error="templatesError"
-          :busy-template-id="selectedTemplateId"
-          @use-template="createFromTemplate"
+          :templates-loading="templatesLoading"
+          :busy="aiBusy"
+          :error="aiError"
+          :disabled="!hasConnections"
+          @update:prompt="aiPrompt = $event"
+          @create="runAiGeneration('create')"
         />
-        <motion.div
-          id="dashboard-ai-panel"
-          class="lg:sticky lg:top-6 lg:self-start"
-          :initial="{ opacity: 0, x: 12 }"
-          :animate="{ opacity: 1, x: 0 }"
-          :transition="{ duration: 0.3, delay: 0.1 }"
-        >
-          <AiViewBuilderPanel
-            :prompt="aiPrompt"
-            :busy="aiBusy"
-            :error="aiError"
-            :disabled="!hasConnections"
-            @update:prompt="aiPrompt = $event"
-            @create="runAiGeneration('create')"
-          />
-        </motion.div>
-      </section>
+      </motion.div>
     </template>
   </motion.div>
 </template>

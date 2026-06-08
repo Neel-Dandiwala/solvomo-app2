@@ -1,9 +1,6 @@
 import type { AlertItem, BrandProfile, ConnectionStatus, LabVersionRow, Workspace } from "~/types/app-shell";
 import type { AdUnifiedSnapshot } from "~/types/ad-unified";
 
-/** Demo persona keys for offline preview; API sessions use Mongo ObjectId strings. */
-export type DemoUserKey = "neel" | "riya";
-
 export type OnboardingStepKey = "survey" | "brand";
 
 export interface UserProfile {
@@ -353,6 +350,47 @@ export interface CrmRow {
 }
 
 // ---------------------------------------------------------------------------
+// Overview stats bypass shape (mirrors api/src/types/playground.ts)
+// ---------------------------------------------------------------------------
+
+export interface PlaygroundOverviewRankedItem { key: string; count: number }
+
+export interface PlaygroundCreditOverview {
+  used: number;
+  plan_maximum: number;
+  remaining: number;
+  top_usage_categories: PlaygroundOverviewRankedItem[];
+}
+
+export interface PlaygroundCreditUsagePoint { date: string; credits: number }
+
+export interface PlaygroundCreditUsageSeries {
+  days: number;
+  points: PlaygroundCreditUsagePoint[];
+}
+
+export interface PlaygroundConnectionsOverview {
+  created: number;
+  plan_maximum: number;
+  top_integration_types: PlaygroundOverviewRankedItem[];
+}
+
+export interface PlaygroundStorageLargestItem { name: string; bytes: number }
+
+export interface PlaygroundStorageOverview {
+  used_bytes: number;
+  plan_maximum_bytes: number;
+  largest_items: PlaygroundStorageLargestItem[];
+}
+
+export interface PlaygroundOverviewStats {
+  credit: PlaygroundCreditOverview;
+  connections: PlaygroundConnectionsOverview;
+  storage: PlaygroundStorageOverview;
+  credit_usage: PlaygroundCreditUsageSeries;
+}
+
+// ---------------------------------------------------------------------------
 // Playground tab bypass shapes (mirrors api/src/types/playground.ts)
 // ---------------------------------------------------------------------------
 
@@ -466,6 +504,8 @@ export interface SolvomoMockBundle {
   assets_data?: PlaygroundAssetsData;
   /** Pre-run simulation records + canned run result. */
   simulation_data?: PlaygroundSimulationData;
+  /** Mock workspace overview stats (credit, connections, storage). */
+  overview_stats?: PlaygroundOverviewStats;
 }
 
 /** Analytics payload from GET /auth/playground/bundle (no workspace tree). */

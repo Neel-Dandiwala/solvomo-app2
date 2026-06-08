@@ -1,14 +1,7 @@
 import type { SolvomoMockBundle } from "~/types/mock";
 import { createEmptyOverviewData, createProductionOverviewHero } from "~/data/empty-overview";
 
-/**
- * Offline-only preview payloads when live services are unavailable.
- * Rich playground data is served from the API (`api/src/data/playground.ts`).
- */
-export const OFFLINE_DEMO_BUNDLES: Record<string, SolvomoMockBundle> = {
-  neel: offlineSparseBundle("neel", "Neel Dandiwala", "neel@solvomo.co", "Head of Growth"),
-  riya: offlineSparseBundle("riya", "Riya Aggarwal", "riya@solvomo.co", "Growth Lead"),
-};
+/** No persona-keyed bundles — playground data is always served from the API. */
 
 type OfflineSparseKind = "offline" | "api";
 
@@ -93,8 +86,8 @@ function offlineSparseBundle(
   };
 }
 
-export function getOfflineMockBundle(userId: string): SolvomoMockBundle | null {
-  return OFFLINE_DEMO_BUNDLES[userId] || null;
+export function getOfflineMockBundle(_userId: string): SolvomoMockBundle | null {
+  return null;
 }
 
 /**
