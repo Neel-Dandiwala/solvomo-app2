@@ -27,6 +27,7 @@ export default defineEventHandler(async (event) => {
     if (
       lower === "set-cookie" ||
       lower === "content-encoding" ||
+      lower === "content-length" ||
       lower === "transfer-encoding" ||
       lower === "connection"
     ) {
