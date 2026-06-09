@@ -229,10 +229,12 @@ const connections = ref<ConnectionItem[]>([]);
 async function loadConnections() {
   if (!canUseApi.value) return;
   try {
-    const raw = await api.getJson<{ id: string; connection_slug: string; display_name?: string; is_active?: boolean }[]>("/auth/connections");
-    connections.value = (raw || []).map((c) => ({
+    const raw = await api.getJson<{
+      connections: { id: string; connection_slug: string; is_active?: boolean }[];
+    }>("/auth/connections");
+    connections.value = (raw.connections || []).map((c) => ({
       id: c.id, slug: c.connection_slug,
-      label: c.display_name || c.connection_slug, connected: c.is_active !== false,
+      label: c.connection_slug, connected: c.is_active !== false,
     }));
   } catch {
     connections.value = [];
@@ -477,7 +479,8 @@ watch(
     playground.assetsData.value,
   ],
   async () => {
-    await Promise.all([loadAssets(), loadConnections()]);
+    await loadAssets();
+    await loadConnections();
   },
   { immediate: true },
 );

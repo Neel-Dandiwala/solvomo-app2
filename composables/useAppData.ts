@@ -9,6 +9,32 @@ import type {
   SolvomoMockBundle,
 } from "~/types/mock";
 
+type PlaygroundPayloadWire = Partial<PlaygroundPayload> & {
+  onboarding_defaults?: PlaygroundPayload["onboardingDefaults"];
+  overview_hero?: PlaygroundPayload["overviewHero"];
+  connections_shell?: PlaygroundPayload["connectionsShell"];
+  connections_onboarding?: PlaygroundPayload["connectionsOnboarding"];
+  lab_versions?: PlaygroundPayload["labVersions"];
+  ad_unified?: PlaygroundPayload["adUnified"];
+};
+
+function normalizePlaygroundPayload(raw: unknown): PlaygroundPayload | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const payload = raw as PlaygroundPayloadWire;
+  if (!payload.profile || !payload.overview || !payload.performance) return null;
+  return {
+    ...(payload as PlaygroundPayload),
+    onboardingDefaults:
+      payload.onboarding_defaults ?? payload.onboardingDefaults ?? [],
+    overviewHero: payload.overview_hero ?? payload.overviewHero!,
+    connectionsShell: payload.connections_shell ?? payload.connectionsShell ?? [],
+    connectionsOnboarding:
+      payload.connections_onboarding ?? payload.connectionsOnboarding ?? [],
+    labVersions: payload.lab_versions ?? payload.labVersions ?? [],
+    adUnified: payload.ad_unified ?? payload.adUnified,
+  };
+}
+
 function mergePlaygroundPayload(payload: PlaygroundPayload, session: AuthSession): SolvomoMockBundle {
   return {
     ...payload,
@@ -59,8 +85,8 @@ export function useAppData() {
     if (playgroundPayload.value !== null || pgFetching.value) return;
     pgFetching.value = true;
     try {
-      const res = await api.getJson<{ payload: PlaygroundPayload }>("/auth/playground/bundle");
-      playgroundPayload.value = res.payload ?? null;
+      const res = await api.getJson<{ payload: PlaygroundPayloadWire }>("/auth/playground/bundle");
+      playgroundPayload.value = normalizePlaygroundPayload(res.payload);
     } catch {
       playgroundPayload.value = null;
     } finally {

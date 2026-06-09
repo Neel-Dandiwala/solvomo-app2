@@ -1,5 +1,6 @@
 import type { AlertItem, BrandProfile, ConnectionStatus, LabVersionRow, Workspace } from "~/types/app-shell";
 import type { AdUnifiedSnapshot } from "~/types/ad-unified";
+import type { PlaygroundSpendData as PlaygroundSpendDataType } from "~/types/spend";
 
 export type OnboardingStepKey = "survey" | "brand";
 
@@ -499,7 +500,7 @@ export interface SolvomoMockBundle {
   /** Normalized ad graph from API (production: Mongo; playground: bundled samples). */
   adUnified?: AdUnifiedSnapshot;
   /** Rich spend API response shapes — used by the Spend tab playground bypass. */
-  spend_data?: PlaygroundSpendData;
+  spend_data?: PlaygroundSpendDataType;
   /** Pre-seeded asset library — used by Asset tab playground bypass. */
   assets_data?: PlaygroundAssetsData;
   /** Pre-run simulation records + canned run result. */

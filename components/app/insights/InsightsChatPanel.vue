@@ -35,12 +35,12 @@ async function send() {
   bottomEl.value?.scrollIntoView({ behavior: "smooth" });
 
   try {
-    const res = await api.postJson<{ data: { reply: string } }>("/insights/chat", {
+    const res = await api.postJson<{ reply: string }>("/insights/chat", {
       ...brandScopeBody(ws, bp),
       message,
       history: history.value.slice(0, -1),
     });
-    history.value.push({ role: "assistant", content: res.data.reply });
+    history.value.push({ role: "assistant", content: res.reply });
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Could not reach the insights assistant.";
     history.value.pop();
