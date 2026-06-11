@@ -32,16 +32,13 @@ function asAnomaly(w: InsightWidgetResult) {
 
 <template>
   <div class="relative max-w-full space-y-5 pb-4">
-    <div class="flex items-start justify-between gap-4">
-      <div>
-        <p class="text-[22px] font-semibold tracking-[-0.03em] text-black">
-          Insights
-        </p>
-        <p class="mt-1 text-[13px] text-black/50">
-          AI-generated analysis from your connected data sources.
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
+    <PageHeader
+      title="Insights"
+      description="AI-generated analysis from your connected data sources."
+      dense
+      hide-context
+    >
+      <template #actions>
         <button
           type="button"
           class="inline-flex items-center gap-1.5 rounded-xl border border-black/[0.08] bg-white px-3 py-2 text-[12px] font-medium text-black/70 shadow-sm transition hover:bg-black/[0.03]"
@@ -60,8 +57,8 @@ function asAnomaly(w: InsightWidgetResult) {
           <MessageCircle class="h-3.5 w-3.5" />
           Ask AI
         </button>
-      </div>
-    </div>
+      </template>
+    </PageHeader>
 
     <!-- Loading -->
     <SurfaceCard

@@ -311,11 +311,20 @@ const chartLabels = computed(() => {
   });
 });
 
-const tableWrapClass =
-  "overflow-x-auto rounded-[1.5rem] border border-black/8 bg-white shadow-[var(--sv-shadow-card)]";
-const thClass =
-  "data-table-th px-4 py-3 text-left text-[12px] font-semibold uppercase tracking-[0.08em] text-black/52 sm:px-6 sm:py-4";
-const tdClass = "data-table-td border-t border-black/6 px-4 py-3 text-black/86 sm:px-6 sm:py-4";
+const weeklyColumns = [
+  { key: "week", label: "Week" },
+  { key: "actual", label: "Spend" },
+];
+
+const pacingColumns = [
+  { key: "campaign", label: "Campaign" },
+  { key: "channel", label: "Channel" },
+  { key: "objective", label: "Objective" },
+  { key: "budget", label: "Budget" },
+  { key: "actual", label: "Actual" },
+  { key: "pace", label: "Pace" },
+  { key: "alert", label: "Alert" },
+];
 </script>
 
 <template>
@@ -577,72 +586,42 @@ const tdClass = "data-table-td border-t border-black/6 px-4 py-3 text-black/86 s
             <div class="mb-3">
               <h3 class="sv-card-title">Weekly summary</h3>
             </div>
-            <div class="border-t border-black/[0.06] pt-3">
-              <div :class="tableWrapClass">
-                <table class="data-table min-w-full text-left text-[15px]">
-                  <thead>
-                    <tr class="data-table-head-row">
-                      <th :class="thClass" scope="col">Week</th>
-                      <th :class="thClass" scope="col">Spend</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="row in weeklyRows" :key="row.id" class="data-table-row">
-                      <td :class="tdClass">{{ row.week }}</td>
-                      <td :class="tdClass">{{ row.actual }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <DataTable
+              :columns="weeklyColumns"
+              :rows="weeklyRows"
+              row-key="id"
+              embed
+            />
           </SurfaceCard>
 
           <SurfaceCard v-if="pacingRows.length" variant="frame" padding="sm" class="col-span-12 xl:col-span-6">
             <div class="mb-3">
               <h3 class="sv-card-title">Budget detail</h3>
             </div>
-            <div class="border-t border-black/[0.06] pt-3">
-              <div :class="tableWrapClass">
-                <table class="data-table min-w-full text-left text-[15px]">
-                  <thead>
-                    <tr class="data-table-head-row">
-                      <th :class="thClass" scope="col">Campaign</th>
-                      <th :class="thClass" scope="col">Channel</th>
-                      <th :class="thClass" scope="col">Objective</th>
-                      <th :class="thClass" scope="col">Budget</th>
-                      <th :class="thClass" scope="col">Actual</th>
-                      <th :class="thClass" scope="col">Pace</th>
-                      <th :class="thClass" scope="col">Alert</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="row in pacingRows" :key="row.id" class="data-table-row">
-                      <td :class="tdClass">{{ row.campaign }}</td>
-                      <td :class="tdClass">
-                        <StatusBadge :label="row.channel" :variant="channelVariant(row.channel)" />
-                      </td>
-                      <td :class="tdClass">{{ row.objective }}</td>
-                      <td :class="tdClass">{{ row.budget }}</td>
-                      <td :class="tdClass">{{ row.actual }}</td>
-                      <td :class="tdClass">
-                        <div class="min-w-[7rem]">
-                          <p class="text-[13px] font-semibold text-black">{{ row.pace }}</p>
-                          <div class="mt-2 h-2 overflow-hidden rounded-full bg-black/[0.06]">
-                            <div
-                              class="h-full rounded-full bg-black/40"
-                              :style="{ width: `${Math.min(Number(row.rawPace), 120)}%` }"
-                            />
-                          </div>
-                        </div>
-                      </td>
-                      <td :class="tdClass">
-                        <StatusBadge :label="row.alert" :variant="statusVariant(row.alert)" />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <DataTable
+              :columns="pacingColumns"
+              :rows="pacingRows"
+              row-key="id"
+              embed
+            >
+              <template #cell-channel="{ row }">
+                <StatusBadge :label="row.channel" :variant="channelVariant(row.channel)" />
+              </template>
+              <template #cell-pace="{ row }">
+                <div class="min-w-[7rem]">
+                  <p class="text-[13px] font-semibold text-black">{{ row.pace }}</p>
+                  <div class="mt-2 h-2 overflow-hidden rounded-full bg-black/[0.06]">
+                    <div
+                      class="h-full rounded-full bg-black/40"
+                      :style="{ width: `${Math.min(Number(row.rawPace), 120)}%` }"
+                    />
+                  </div>
+                </div>
+              </template>
+              <template #cell-alert="{ row }">
+                <StatusBadge :label="row.alert" :variant="statusVariant(row.alert)" />
+              </template>
+            </DataTable>
           </SurfaceCard>
         </div>
       </section>

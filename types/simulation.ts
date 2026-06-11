@@ -192,6 +192,15 @@ export interface SimulationConfig {
   evolve_status?: SimulationEvolveStatus;
 }
 
+export type SimulationInsufficientDataReason =
+  | "no_integration_rows"
+  | "no_budget_configured"
+  | "coverage_below_threshold"
+  | "provider_unavailable"
+  | "connector_error";
+
+export type SimulationRunStatus = "complete" | "insufficient_data" | "failed";
+
 /** Persisted shape (asset IDs only — no hydrated data). */
 export interface SimulationPersistBody {
   workspace_id: string;
@@ -199,6 +208,8 @@ export interface SimulationPersistBody {
   name: string;
   creative_id?: string;
   variant_id?: string;
+  creative_ids?: string[];
+  variant_ids?: string[];
   audience_id?: string;
   budget_id?: string;
   connections?: SimulationConnectionConfig[];
@@ -211,11 +222,34 @@ export interface SimulationPersistBody {
   evolve_status?: SimulationEvolveStatus;
 }
 
+export type SimulationRunSummary = {
+  run_id: string;
+  simulation_id: string;
+  analysis_tab: SimulationAnalysisTab;
+  status: SimulationRunStatus;
+  eval_status?: "accepted" | "repaired" | "failed";
+  reason?: SimulationInsufficientDataReason;
+  forecast_days?: number;
+  summary: string;
+  confidence_score?: number;
+  winner_variant_id?: string;
+  started_at: string;
+  completed_at?: string;
+  duration_ms?: number;
+  source_coverage?: SimulationRunResult["source_coverage"];
+};
+
+export type SimulationRunListResponse = {
+  simulation_id: string;
+  runs: SimulationRunSummary[];
+};
+
 /** Server response for a single simulation run. */
 export interface SimulationRunResult {
   run_id: string;
   analysis_tab: SimulationAnalysisTab;
-  status: "complete" | "failed";
+  status: SimulationRunStatus;
+  reason?: SimulationInsufficientDataReason;
   eval_status: "accepted" | "repaired" | "failed";
   forecast_days: number;
   daily_forecast: Array<{
@@ -232,6 +266,7 @@ export interface SimulationRunResult {
   evidence: Array<{
     id: string;
     source: string;
+    tool_name?: string;
     label: string;
     confidence: number;
     data: unknown;
@@ -256,11 +291,24 @@ export interface SimulationRunResult {
     used_provider_fallback: boolean;
     used_assumptions: boolean;
   };
+  completed_at?: string;
+  fetched_at?: string;
+}
+
+export interface SimulationLastRunPointer {
+  run_id: string;
+  run_at: string;
+  status: SimulationRunStatus;
+  analysis_tab: SimulationAnalysisTab;
+  confidence_score?: number;
+  reason?: SimulationInsufficientDataReason;
 }
 
 /** Persisted simulation record (from GET /simulations or GET /simulations/:id). */
 export interface SimulationRecord extends SimulationPersistBody {
   id: string;
+  last_run?: SimulationLastRunPointer;
+  schema_version?: number;
   created_at?: string;
   updated_at?: string;
   hydrated?: SimulationConfig;

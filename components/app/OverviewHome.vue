@@ -28,7 +28,7 @@ const {
   refreshConnectionsData,
   integrationBySlug,
 } = useConnectionsData();
-const { views, viewsLoading, refreshViews } = useOverviewViews();
+const { views, viewsLoading, viewsError, refreshViews } = useOverviewViews();
 const api = useApiClient();
 const {
   credit,
@@ -43,6 +43,7 @@ const recentSimulations = ref<
   Array<{ id: string; name: string; platform?: string; createdAt?: string }>
 >([]);
 const simulationsLoading = ref(false);
+const simulationsError = ref<string | null>(null);
 
 onMounted(() => {
   void refreshConnectionsData();
@@ -75,7 +76,7 @@ const recentDashboards = computed(() =>
   views.value.slice(0, 4).map((v) => ({
     id: v.id,
     name: v.name,
-    to: `/app/dashboards?view_id=${encodeURIComponent(v.id)}`,
+    to: `/app/dashboards/${encodeURIComponent(v.id)}`,
   })),
 );
 
@@ -111,7 +112,7 @@ const setupItems = computed(() => {
       cta: "Add budget",
     });
   }
-  if (connCount && !views.value.length) {
+  if (connCount && !views.value.length && !viewsError.value) {
     items.push({
       id: "dashboard",
       label: "Create your first dashboard from connected data.",
@@ -120,7 +121,7 @@ const setupItems = computed(() => {
       cta: "Create dashboard",
     });
   }
-  if (connCount && !recentSimulations.value.length) {
+  if (connCount && !recentSimulations.value.length && !simulationsError.value) {
     items.push({
       id: "simulation",
       label: "Upload a creative to start your first simulation.",
@@ -240,8 +241,13 @@ const creditChartSeries = computed(() => {
 async function loadRecentSimulations() {
   const ws = workspace.currentWorkspaceId.value;
   const bp = workspace.currentBrandProfileId.value;
-  if (!api.hasBase.value || !ws || !bp) return;
+  if (!api.hasBase.value || !ws || !bp) {
+    recentSimulations.value = [];
+    simulationsError.value = null;
+    return;
+  }
   simulationsLoading.value = true;
+  simulationsError.value = null;
   try {
     const res = await api.getJson<
       Array<{ id: string; name: string; created_at?: string; variants?: Array<{ platform?: string }> }>
@@ -254,8 +260,12 @@ async function loadRecentSimulations() {
       platform: s.variants?.[0]?.platform,
       createdAt: s.created_at,
     }));
-  } catch {
+  } catch (e) {
     recentSimulations.value = [];
+    simulationsError.value =
+      e instanceof Error && e.message
+        ? e.message
+        : "Could not load recent simulations.";
   } finally {
     simulationsLoading.value = false;
   }
@@ -448,6 +458,12 @@ function formatCreditTick(value: number) {
           <NuxtLink to="/app/simulation" class="text-[12px] font-semibold text-black/50 hover:text-black">View all</NuxtLink>
         </div>
         <p v-if="simulationsLoading" class="mt-4 text-[13px] text-black/50">Loading…</p>
+        <div
+          v-else-if="simulationsError"
+          class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-[13px] text-amber-800"
+        >
+          {{ simulationsError }}
+        </div>
         <ul v-else-if="recentSimulations.length" class="mt-4 space-y-3">
           <li v-for="sim in recentSimulations" :key="sim.id">
             <NuxtLink
@@ -473,6 +489,12 @@ function formatCreditTick(value: number) {
           <NuxtLink to="/app/dashboards" class="text-[12px] font-semibold text-black/50 hover:text-black">View all</NuxtLink>
         </div>
         <p v-if="viewsLoading" class="mt-4 text-[13px] text-black/50">Loading…</p>
+        <div
+          v-else-if="viewsError"
+          class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-[13px] text-amber-800"
+        >
+          {{ viewsError }}
+        </div>
         <ul v-else-if="recentDashboards.length" class="mt-4 space-y-3">
           <li v-for="dash in recentDashboards" :key="dash.id">
             <NuxtLink

@@ -10,6 +10,10 @@ useHead({ title: "Onboarding — Brand profile | Solvomo" });
 
 const auth = useAuth();
 const api = useApiClient();
+const route = useRoute();
+
+/** Settings deep-links here with `?edit=1` to edit an existing brand profile. */
+const isEditMode = computed(() => route.query.edit != null);
 const {
   currentWorkspace,
   currentBrandProfile,
@@ -107,6 +111,10 @@ async function finishOnboarding() {
 
     auth.completeOnboardingStep("brand");
     resetDraft();
+    if (isEditMode.value) {
+      await navigateTo("/app/settings");
+      return;
+    }
     await navigateTo(nextOnboardingPathForSteps([
       ...auth.onboardingStepsDone.value,
       "brand",
@@ -122,7 +130,7 @@ async function finishOnboarding() {
 <template>
   <div>
     <OnboardingHero
-      title="Name your workspace and brand"
+      :title="isEditMode ? 'Edit your workspace and brand' : 'Name your workspace and brand'"
       description="Add the public social or ad profiles we should use to enrich simulations."
     />
 
@@ -238,8 +246,11 @@ async function finishOnboarding() {
         </div>
       </div>
       <div class="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-black/8 pt-8">
-        <NuxtLink :to="ONBOARDING_ROUTE_BY_STEP.survey" class="nav-link inline-flex text-sm font-semibold">
-          Back
+        <NuxtLink
+          :to="isEditMode ? '/app/settings' : ONBOARDING_ROUTE_BY_STEP.survey"
+          class="nav-link inline-flex text-sm font-semibold"
+        >
+          {{ isEditMode ? "Cancel" : "Back" }}
         </NuxtLink>
         <div class="flex flex-col items-end gap-2">
           <p v-if="saveError" class="text-xs text-red-600">{{ saveError }}</p>
@@ -249,7 +260,7 @@ async function finishOnboarding() {
             :disabled="saving"
             @click="finishOnboarding"
           >
-            {{ saving ? "Saving…" : "Continue" }}
+            {{ saving ? "Saving…" : isEditMode ? "Save changes" : "Continue" }}
           </button>
         </div>
       </div>

@@ -76,10 +76,12 @@ onMounted(() => {
       :animate="{ opacity: 1, y: 0 }"
       :transition="{ duration: 0.3 }"
     >
-      <p class="text-[22px] font-semibold tracking-[-0.03em] text-black">Dashboards</p>
-      <p class="mt-1 max-w-2xl text-[13px] leading-relaxed text-black/55">
-        Open a saved dashboard, start from a connector template, or describe a new view with AI.
-      </p>
+      <PageHeader
+        title="Dashboards"
+        description="Open a saved dashboard, start from a connector template, or describe a new view with AI."
+        dense
+        hide-context
+      />
     </motion.div>
 
     <ConnectionEmptyState v-if="showConnectionEmptyState" />

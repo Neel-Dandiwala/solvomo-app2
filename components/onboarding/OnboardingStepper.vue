@@ -11,7 +11,7 @@ const steps = [
 </script>
 
 <template>
-  <nav class="sv-stepper rounded-2xl border border-black/8 bg-white/95 px-4 py-4 sm:px-6 sm:py-5" aria-label="Onboarding progress">
+  <nav class="rounded-2xl border border-black/8 bg-white/95 px-4 py-4 sm:px-6 sm:py-5" aria-label="Onboarding progress">
     <ol class="grid gap-6 sm:grid-cols-2">
       <li
         v-for="(s, i) in steps"

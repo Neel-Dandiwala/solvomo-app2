@@ -12,23 +12,44 @@ import {
   TriangleAlert,
   Zap,
 } from "lucide-vue-next";
-import type { SimulationAnalysisTab, SimulationRunResult } from "~/types/simulation";
+import type { SimulationAnalysisTab, SimulationMetricKey, SimulationRunResult } from "~/types/simulation";
 
 definePageMeta({ layout: "app" });
 
 const route = useRoute();
-const { stored } = useSimulationResult();
+const { stored, resolveResult } = useSimulationResult();
 
 const simId = computed(() => String(route.params.id));
+const runId = computed(() =>
+  String(route.query.run_id || stored.value?.result?.run_id || ""),
+);
 
-const runData = computed(() => {
-  if (stored.value?.sim_id === simId.value) return stored.value;
-  return null;
-});
+const loading = ref(true);
+const loadError = ref<string | null>(null);
+const result = ref<SimulationRunResult | null>(null);
 
-const result = computed<SimulationRunResult | null>(() => runData.value?.result ?? null);
-const analysisTab = computed<SimulationAnalysisTab>(() => runData.value?.analysis_tab ?? "forecast");
-const simName = computed(() => runData.value?.sim_name ?? "Simulation");
+const analysisTab = computed<SimulationAnalysisTab>(
+  () => result.value?.analysis_tab ?? stored.value?.analysis_tab ?? "forecast",
+);
+const simName = computed(() => stored.value?.sim_name ?? "Simulation");
+const ranAt = computed(
+  () => result.value?.fetched_at || stored.value?.ran_at || null,
+);
+
+async function loadResult() {
+  loading.value = true;
+  loadError.value = null;
+  const resolved = await resolveResult(simId.value, runId.value || null);
+  if (!resolved) {
+    loadError.value = "no_rows";
+    result.value = null;
+  } else {
+    result.value = resolved;
+  }
+  loading.value = false;
+}
+
+watch([simId, runId], () => { void loadResult(); }, { immediate: true });
 
 useHead({ title: computed(() => `${simName.value} — Results`) });
 
@@ -64,6 +85,10 @@ const FOCUS_LABELS: Record<SimulationAnalysisTab, { label: string; description: 
 const outputMetrics = ["SPEND", "CLICKS_ALL", "CTR_ALL", "CONVERSIONS", "ROAS", "COST_PER_CONVERSION"] as const;
 type OutputMetric = (typeof outputMetrics)[number];
 const selectedMetric = ref<OutputMetric>("ROAS");
+
+function setSelectedMetric(metric: OutputMetric) {
+  selectedMetric.value = metric;
+}
 
 const totals = computed(() => {
   if (!result.value) return { spend: 0, value: 0, conversions: 0, roas: 0, cpa: 0 };
@@ -103,16 +128,93 @@ const chartMax = computed(() => {
   const vals = result.value.daily_forecast.map((r) => r.metrics[selectedMetric.value] ?? 0);
   return Math.max(...vals, 0.001);
 });
+
+function metricLabel(metric: string) {
+  return metric.replace(/_ALL$/, "").replace(/_/g, " ");
+}
+
+function formatForecastMetric(metric: SimulationMetricKey, value?: number) {
+  if (value == null) return "—";
+  if (metric === "CTR_ALL") return `${(value * 100).toFixed(2)}%`;
+  if (metric === "ROAS") return `${value.toFixed(2)}x`;
+  return formatCompactCurrency(value);
+}
+
+const forecastColumns = computed(() => [
+  { key: "date", label: "Date", class: "font-mono text-black/60" },
+  ...outputMetrics.map((metric) => ({
+    key: metric,
+    label: metricLabel(metric),
+    class: "text-right font-mono text-black/70",
+    headerClass: "text-right",
+  })),
+]);
+
+const forecastRows = computed(() => {
+  if (!result.value) return [];
+  const rows = result.value.daily_forecast.map((row, index) => {
+    const formatted: Record<string, unknown> = {
+      id: `forecast-${index}`,
+      date: row.date,
+      is_total: false,
+    };
+    for (const metric of outputMetrics) {
+      formatted[metric] = formatForecastMetric(metric, row.metrics[metric]);
+    }
+    return formatted;
+  });
+  rows.push({
+    id: "forecast-total",
+    date: `${result.value.forecast_days}d Total`,
+    is_total: true,
+    SPEND: formatCompactCurrency(totals.value.spend),
+    CLICKS_ALL: "—",
+    CTR_ALL: "—",
+    CONVERSIONS: formatCompactNumber(totals.value.conversions),
+    ROAS: `${roasDerived.value.toFixed(2)}x`,
+    COST_PER_CONVERSION: cpaDerived.value > 0 ? formatCurrency(cpaDerived.value, 0) : "—",
+  });
+  return rows;
+});
+
+const pipelineColumns = [
+  { key: "step_name", label: "Step", class: "font-mono text-black/65" },
+  { key: "status", label: "Status" },
+  { key: "duration", label: "Duration", class: "text-right font-mono text-black/45", headerClass: "text-right" },
+  { key: "warnings", label: "Warnings", class: "text-black/40" },
+];
+
+const pipelineRows = computed(() => {
+  if (!result.value) return [];
+  return result.value.step_results.map((step, index) => ({
+    id: `step-${index}`,
+    step_name: step.step_name,
+    status: step.status,
+    duration: `${step.duration_ms}ms`,
+    warnings: step.warnings?.join("; ") || "—",
+  }));
+});
 </script>
 
 <template>
-  <div v-if="!result" class="flex flex-col items-center justify-center py-24 text-center">
+  <div v-if="loading" class="flex flex-col items-center justify-center py-24 text-center">
+    <p class="text-[15px] font-semibold text-black/60">Loading simulation results…</p>
+  </div>
+
+  <div v-else-if="loadError || !result" class="flex flex-col items-center justify-center py-24 text-center">
     <p class="text-[15px] font-semibold text-black/60">No results found for this simulation.</p>
-    <p class="mt-1 text-[13px] text-black/40">Run the simulation first from the builder.</p>
-    <NuxtLink to="/app/simulation" class="mt-4 app-button button-secondary gap-1.5 px-4">
-      <ArrowLeft class="h-4 w-4" :stroke-width="1.9" />
-      Back to builder
-    </NuxtLink>
+    <p class="mt-1 text-[13px] text-black/40">
+      {{ loadError === "no_rows" ? "This run is not available — run again or pick a run from history." : "Run the simulation first from the builder." }}
+    </p>
+    <div class="mt-4 flex gap-2">
+      <NuxtLink :to="`/app/simulation/${simId}/runs`" class="app-button button-secondary gap-1.5 px-4">
+        Run history
+      </NuxtLink>
+      <NuxtLink to="/app/simulation" class="app-button button-secondary gap-1.5 px-4">
+        <ArrowLeft class="h-4 w-4" :stroke-width="1.9" />
+        Builder
+      </NuxtLink>
+    </div>
   </div>
 
   <div v-else class="max-w-full pb-16">
@@ -122,17 +224,24 @@ const chartMax = computed(() => {
         <ArrowLeft class="h-3.5 w-3.5" :stroke-width="2" />
         Builder
       </NuxtLink>
+      <NuxtLink
+        :to="`/app/simulation/${simId}/runs`"
+        class="flex items-center gap-1.5 rounded-lg border border-black/[0.08] bg-white px-3 py-1.5 text-[12px] font-semibold text-black/55 hover:bg-black/[0.03] transition-colors"
+      >
+        Run history
+      </NuxtLink>
       <div class="flex-1 min-w-0">
-        <h1 class="text-[15px] font-bold leading-snug text-black truncate">{{ simName }}</h1>
+        <h1 class="text-lg font-bold leading-snug text-black truncate">{{ simName }}</h1>
         <p class="text-[12px] text-black/40">
           {{ FOCUS_LABELS[analysisTab].label }} ·
-          ran {{ runData?.ran_at ? new Date(runData.ran_at).toLocaleString() : "just now" }}
+          ran {{ ranAt ? new Date(ranAt).toLocaleString() : "just now" }}
+          <span v-if="result.fetched_at"> · source: server</span>
         </p>
       </div>
       <!-- Status badges -->
       <span
         class="shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide"
-        :class="result.status === 'complete' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'"
+        :class="result.status === 'complete' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : result.status === 'insufficient_data' ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-rose-200 bg-rose-50 text-rose-700'"
       >
         {{ result.status }}
       </span>
@@ -297,14 +406,22 @@ const chartMax = computed(() => {
                   type="button"
                   class="rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors duration-150"
                   :class="selectedMetric === m ? 'border-black bg-black text-white' : 'border-black/[0.10] bg-white text-black/55 hover:border-black/[0.20]'"
-                  @click="selectedMetric = m as OutputMetric"
+                  @click="setSelectedMetric(m)"
                 >
-                  {{ m.replace(/_ALL$/, "").replace(/_/g, " ") }}
+                  {{ metricLabel(m) }}
                 </button>
               </div>
             </div>
 
-            <!-- Simple bar chart -->
+            <p v-if="result.status === 'insufficient_data'" class="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
+              Forecast blocked: {{ result.reason || "insufficient_data" }}. Connect integrations and link variant sources to unlock numeric forecasts.
+            </p>
+
+            <!-- Bar chart with axis caption -->
+            <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-black/35">
+              {{ metricLabel(selectedMetric) }} by day
+              <span v-if="result.fetched_at" class="font-normal normal-case text-black/30"> · as of {{ new Date(result.fetched_at).toLocaleString() }}</span>
+            </p>
             <div class="flex items-end gap-1 overflow-x-auto" style="height: 120px;">
               <div
                 v-for="(row, i) in result.daily_forecast"
@@ -326,43 +443,12 @@ const chartMax = computed(() => {
           </div>
 
           <!-- Forecast table -->
-          <div class="rounded-2xl border border-black/[0.07] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
-            <div class="overflow-x-auto">
-              <table class="w-full text-[12px]">
-                <thead>
-                  <tr class="border-b border-black/[0.06] bg-black/[0.02]">
-                    <th class="px-4 py-2.5 text-left font-bold uppercase tracking-wide text-black/40">Date</th>
-                    <th v-for="m in outputMetrics" :key="m" class="px-3 py-2.5 text-right font-bold uppercase tracking-wide text-black/40">
-                      {{ m.replace(/_ALL$/, "").replace(/_/g, " ") }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(row, i) in result.daily_forecast"
-                    :key="i"
-                    class="border-b border-black/[0.04] hover:bg-black/[0.015]"
-                  >
-                    <td class="px-4 py-2 font-mono text-black/60">{{ row.date }}</td>
-                    <td v-for="m in outputMetrics" :key="m" class="px-3 py-2 text-right font-mono text-black/70">
-                      {{ row.metrics[m] != null ? (m === 'CTR_ALL' ? `${(row.metrics[m]! * 100).toFixed(2)}%` : m === 'ROAS' ? `${(row.metrics[m]!).toFixed(2)}x` : formatCompactCurrency(row.metrics[m]!)) : "—" }}
-                    </td>
-                  </tr>
-                </tbody>
-                <tfoot>
-                  <tr class="border-t border-black/[0.10] bg-black/[0.02] font-bold">
-                    <td class="px-4 py-2.5 text-[11px] font-bold uppercase tracking-wide text-black/50">{{ result.forecast_days }}d Total</td>
-                    <td class="px-3 py-2.5 text-right font-mono text-black">{{ formatCompactCurrency(totals.spend) }}</td>
-                    <td class="px-3 py-2.5 text-right text-black/30">—</td>
-                    <td class="px-3 py-2.5 text-right text-black/30">—</td>
-                    <td class="px-3 py-2.5 text-right font-mono text-black">{{ formatCompactNumber(totals.conversions) }}</td>
-                    <td class="px-3 py-2.5 text-right font-mono text-black">{{ roasDerived.toFixed(2) }}x</td>
-                    <td class="px-3 py-2.5 text-right font-mono text-black">{{ cpaDerived > 0 ? formatCurrency(cpaDerived, 0) : "—" }}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
+          <DataTable
+            :columns="forecastColumns"
+            :rows="forecastRows"
+            row-key="id"
+            empty-label="No forecast rows returned."
+          />
         </div>
 
         <!-- ── REASONING ── -->
@@ -413,10 +499,17 @@ const chartMax = computed(() => {
                 </span>
                 <div class="flex-1 min-w-0">
                   <p class="text-[13px] font-semibold text-black">{{ ev.label }}</p>
-                  <p class="text-[11px] text-black/40">{{ ev.source }} · confidence {{ Math.round((ev.confidence ?? 0) * 100) }}%</p>
+                  <p class="text-[11px] text-black/40">
+                    {{ ev.source }}
+                    <span v-if="ev.tool_name"> · {{ ev.tool_name }}</span>
+                    · confidence {{ Math.round((ev.confidence ?? 0) * 100) }}%
+                  </p>
                 </div>
               </summary>
-              <pre v-if="ev.data" class="mt-3 overflow-x-auto rounded-lg bg-black/[0.03] p-3 text-[11px] text-black/60">{{ JSON.stringify(ev.data, null, 2) }}</pre>
+              <p class="mt-2 text-[12px] text-black/55">
+                Lineage: source={{ ev.source }}, label={{ ev.label }}, confidence={{ Math.round((ev.confidence ?? 0) * 100) }}%
+              </p>
+              <pre v-if="ev.data" class="mt-2 overflow-x-auto rounded-lg bg-black/[0.03] p-3 text-[11px] text-black/60">{{ JSON.stringify(ev.data, null, 2) }}</pre>
             </details>
           </div>
           <p v-else class="text-[13px] text-black/40">No evidence items returned.</p>
@@ -441,37 +534,22 @@ const chartMax = computed(() => {
         <!-- ── PIPELINE STEPS ── -->
         <div v-show="activeSection === 'pipeline'" class="rounded-2xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <p class="mb-4 text-[11px] font-bold uppercase tracking-wide text-black/40">Pipeline steps ({{ result.step_results?.length ?? 0 }})</p>
-          <div v-if="result.step_results?.length" class="overflow-x-auto">
-            <table class="w-full text-[12px]">
-              <thead>
-                <tr class="border-b border-black/[0.06]">
-                  <th class="pb-2 pr-4 text-left font-bold uppercase tracking-wide text-black/40">Step</th>
-                  <th class="pb-2 pr-4 text-left font-bold uppercase tracking-wide text-black/40">Status</th>
-                  <th class="pb-2 pr-4 text-right font-bold uppercase tracking-wide text-black/40">Duration</th>
-                  <th class="pb-2 text-left font-bold uppercase tracking-wide text-black/40">Warnings</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="(step, i) in result.step_results"
-                  :key="i"
-                  class="border-b border-black/[0.04]"
-                >
-                  <td class="py-2 pr-4 font-mono text-black/65">{{ step.step_name }}</td>
-                  <td class="py-2 pr-4">
-                    <span
-                      class="rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                      :class="step.status === 'ok' || step.status === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'"
-                    >
-                      {{ step.status }}
-                    </span>
-                  </td>
-                  <td class="py-2 pr-4 text-right font-mono text-black/45">{{ step.duration_ms }}ms</td>
-                  <td class="py-2 text-black/40">{{ step.warnings?.join("; ") || "—" }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            v-if="result.step_results?.length"
+            :columns="pipelineColumns"
+            :rows="pipelineRows"
+            row-key="id"
+            embed
+          >
+            <template #cell-status="{ row }">
+              <span
+                class="rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                :class="row.status === 'ok' || row.status === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'"
+              >
+                {{ row.status }}
+              </span>
+            </template>
+          </DataTable>
           <p v-else class="text-[13px] text-black/40">No pipeline steps returned.</p>
         </div>
 

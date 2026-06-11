@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { LayoutDashboard, Plus, Star } from "lucide-vue-next";
-import type { DashboardViewListItem } from "~/composables/useDashboardTab";
+import type { DashboardViewListItem } from "~/types/saved-view";
 
 defineProps<{
   views: DashboardViewListItem[];

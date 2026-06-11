@@ -10,12 +10,6 @@ export function useSimulationPersist() {
   const assets = useAssetsApi();
   const workspace = useWorkspaceContext();
 
-  /**
-   * Persists simulation config as asset records, then returns ID refs for the simulation document.
-   *
-   * Asset creates run sequentially. If any fail, the assets created so far are
-   * archived (soft-deleted) before re-throwing, preventing orphaned records.
-   */
   async function persistFromConfig(
     config: SimulationConfig,
     simulationName: string,
@@ -28,24 +22,19 @@ export function useSimulationPersist() {
 
     const base = { workspace_id: ws, brandprofile_id: bp };
     const connections = config.connections ?? [];
-    const variant = config.variants?.[0];
+    const variantList = config.variants ?? [];
 
-    // Create each asset sequentially. Track created ids so we can roll back
-    // (soft-delete) everything made so far if a later create fails.
     const rollbackIds: Array<{
       kind: "creative" | "audience" | "budgets";
       id: string;
     }> = [];
-    let creativeIds: { creative_id?: string; variant_id?: string } = {
-      creative_id: undefined,
-      variant_id: undefined,
-    };
+    const creative_ids: string[] = [];
+    const variant_ids: string[] = [];
     let audienceAsset: { id: string } | null = null;
     let budgetAsset: { id: string } | null = null;
 
     try {
-      // Creative + variant must be sequential (variant references creative ID).
-      if (variant) {
+      for (const variant of variantList) {
         const creative = await assets.create<{ id: string }>("creative", {
           ...base,
           name: `${simulationName} — ${variant.label || variant.variant_id || "creative"}`,
@@ -60,9 +49,11 @@ export function useSimulationPersist() {
           call_to_action: variant.call_to_action,
         });
         rollbackIds.push({ kind: "creative", id: creative.id });
+        creative_ids.push(creative.id);
+
         const va = await assets.create<{ id: string }>("variants", {
           ...base,
-          name: `${simulationName} — variant ${variant.variant_id || creative.id}`,
+          name: `${simulationName} — variant ${variant.label || variant.variant_id || creative.id}`,
           source_type: "simulation_snapshot",
           slot_key: String(variant.variant_id || creative.id),
           creative_asset_id: creative.id,
@@ -71,9 +62,8 @@ export function useSimulationPersist() {
           object_type: variant.object_type || "ads_ad",
           source: variant.source ?? null,
         });
-        // variants share the creative archive endpoint
         rollbackIds.push({ kind: "creative", id: va.id });
-        creativeIds = { creative_id: creative.id, variant_id: va.id };
+        variant_ids.push(va.id);
       }
 
       if (config.audience && Object.keys(config.audience).length) {
@@ -97,12 +87,11 @@ export function useSimulationPersist() {
         rollbackIds.push({ kind: "budgets", id: budgetAsset.id });
       }
     } catch (err) {
-      // Rollback: archive any assets that were successfully created, one by one.
       for (const r of rollbackIds) {
         try {
           await assets.archive(r.kind, r.id);
         } catch {
-          // best-effort rollback; surface the original error below
+          // best-effort rollback
         }
       }
       throw err instanceof Error ? err : new Error(String(err));
@@ -112,8 +101,10 @@ export function useSimulationPersist() {
       workspace_id: ws,
       brandprofile_id: bp,
       name: simulationName,
-      creative_id: creativeIds?.creative_id,
-      variant_id: creativeIds?.variant_id,
+      creative_id: creative_ids[0],
+      variant_id: variant_ids[0],
+      creative_ids: creative_ids.length ? creative_ids : undefined,
+      variant_ids: variant_ids.length ? variant_ids : undefined,
       audience_id: audienceAsset?.id,
       budget_id: budgetAsset?.id,
       connections,

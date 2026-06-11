@@ -22,6 +22,7 @@ import type {
 } from "~/types/simulation";
 import { getPlaygroundExampleAssets } from "~/data/playground-example-assets";
 import { ApiRequestError } from "~/utils/routeResponse";
+import { convertAmountToUsd } from "~/utils/simulationCurrency";
 
 definePageMeta({ layout: "app" });
 useHead({ title: "Simulation — Solvomo" });
@@ -125,6 +126,7 @@ type RealAsset = {
 };
 const libraryAssets = ref<RealAsset[]>([]);
 const assetsLoading = ref(false);
+const assetsError = ref<string | null>(null);
 
 function mapPlaygroundCreatives(
   creatives: Array<{ id: string; name: string; platform?: string; format?: string; headline?: string | null; asset_url?: string | null }>,
@@ -142,6 +144,7 @@ function mapPlaygroundCreatives(
 
 async function loadAssets() {
   const scope = activeScope.value;
+  assetsError.value = null;
   if (playground.isPlayground.value) {
     const fromBundle = playground.assetsData.value?.creative;
     const creatives = fromBundle?.length ? fromBundle : getPlaygroundExampleAssets("creative");
@@ -154,13 +157,24 @@ async function loadAssets() {
     const qs = `?workspace_id=${encodeURIComponent(scope.workspaceId)}&brandprofile_id=${encodeURIComponent(scope.brandprofileId)}&status=active&limit=60`;
     let variants: RealAsset[] = [];
     let creative: RealAsset[] = [];
+    let variantErr: string | null = null;
+    let creativeErr: string | null = null;
     try {
       variants = await api.getJson<RealAsset[]>(`/assets/variants${qs}`);
-    } catch { /* ignore */ }
+    } catch (err) {
+      variantErr = err instanceof Error ? err.message : String(err);
+    }
     try {
       creative = await api.getJson<RealAsset[]>(`/assets/creative${qs}`);
-    } catch { /* ignore */ }
+    } catch (err) {
+      creativeErr = err instanceof Error ? err.message : String(err);
+    }
     libraryAssets.value = [...(variants || []), ...(creative || [])];
+    if (variantErr && creativeErr) {
+      assetsError.value = "Could not load asset library (connector_error).";
+    } else if (!libraryAssets.value.length && (variantErr || creativeErr)) {
+      assetsError.value = "Asset library unavailable for this workspace.";
+    }
   } finally {
     assetsLoading.value = false;
   }
@@ -225,9 +239,11 @@ const budgetMismatch = computed(() => {
 // ── Section 6: Connections ───────────────────────────────────────────────────
 type ConnectionItem = { id: string; slug: string; label: string; connected: boolean };
 const connections = ref<ConnectionItem[]>([]);
+const connectionsError = ref<string | null>(null);
 
 async function loadConnections() {
   if (!canUseApi.value) return;
+  connectionsError.value = null;
   try {
     const raw = await api.getJson<{
       connections: { id: string; connection_slug: string; is_active?: boolean }[];
@@ -236,8 +252,9 @@ async function loadConnections() {
       id: c.id, slug: c.connection_slug,
       label: c.connection_slug, connected: c.is_active !== false,
     }));
-  } catch {
+  } catch (err) {
     connections.value = [];
+    connectionsError.value = err instanceof Error ? err.message : "connector_error";
   }
 }
 
@@ -306,13 +323,44 @@ const overallReadiness = computed(() => {
   return Math.round(score);
 });
 
-const canRun = computed(() => variants.value.length > 0 && !running.value);
-
 // ── Run ──────────────────────────────────────────────────────────────────────
 const saving = ref(false);
 const running = ref(false);
 const runError = ref<string | null>(null);
 const creditError = ref<string | null>(null);
+
+// Playground runs read a canned result from the loaded sandbox bundle. Block the
+// Run button until that bundle is present so an early click can't fail with
+// "Playground simulation data not available."
+const playgroundReady = computed(
+  () => !playground.isPlayground.value || !!playground.simulationData.value?.run_result,
+);
+
+const canRun = computed(
+  () =>
+    variants.value.length > 0 &&
+    !running.value &&
+    !saving.value &&
+    playgroundReady.value,
+);
+
+// Agent plan preview — pipeline steps for selected analysis tab (shown before run).
+const agentPlanApproved = ref(false);
+const pipelinePreview = computed(() => {
+  // Mirrors GET /simulations/analysis-tabs; keep in sync with backend tab pipelines.
+  const stepsByTab: Record<SimulationAnalysisTab, string[]> = {
+    forecast: ["buildForecastCalendar", "buildHolidayCalendar", "scoreTiming"],
+    creative: ["extractCreativeInputs", "inspectCreativeMetadata", "extractCreativeThemes"],
+    copy: ["extractCopyInputs", "analyzeCopyCompleteness", "scoreCopy"],
+    audience: ["extractAudienceInputs", "classifyAudience", "estimateAudienceSize"],
+    placement: ["extractPlacementInputs", "checkPlacementEligibility", "scorePlacementFormatFit"],
+    platform: ["checkPlatformAvailability", "scorePlatformCreativeFit", "aggregatePlatform"],
+    budget: ["extractBudgetInputs", "reconcileBudgetConfig", "estimateBudgetSufficiency"],
+    offer: ["extractOfferInputs", "benchmarkOffer", "scoreOfferFit"],
+    timing: ["buildForecastCalendar", "buildHolidayCalendar", "scoreTiming"],
+  };
+  return stepsByTab[analysisTab.value] ?? [];
+});
 
 function buildSimulationConfig(): SimulationConfig {
   const scope = activeScope.value;
@@ -377,7 +425,8 @@ function buildSimulationConfig(): SimulationConfig {
       daily_budget_amount: dailyBudget.value,
       currency: currency.value,
       duration_days: durationDays.value,
-      total_budget_usd: totalBudget.value,
+      total_budget_usd:
+        convertAmountToUsd(totalBudget.value, currency.value) ?? totalBudget.value,
     },
     bid_strategy: bidStrategy.value,
     run_request: {
@@ -426,13 +475,17 @@ async function runSimulation() {
     return;
   }
 
+  if (!agentPlanApproved.value && !playground.isPlayground.value) {
+    runError.value = "Review the run plan and confirm before running.";
+    return;
+  }
+
   // ── Run ──────────────────────────────────────────────────────────────────
   running.value = true;
   try {
     let result: SimulationRunResult;
 
     if (playground.isPlayground.value) {
-      // Use the canned playground run result — no API call, no credit deduction.
       const pgResult = playground.simulationData.value?.run_result;
       if (!pgResult) {
         runError.value = "Playground simulation data not available.";
@@ -442,7 +495,7 @@ async function runSimulation() {
     } else {
       result = await api.postJson<SimulationRunResult>(
         `/simulations/${encodeURIComponent(simId)}/run`,
-        { analysis_tab: analysisTab.value }
+        { analysis_tab: analysisTab.value },
       );
     }
 
@@ -452,10 +505,13 @@ async function runSimulation() {
         sim_name: simName.value,
         analysis_tab: analysisTab.value,
         result,
-        ran_at: new Date().toISOString(),
+        ran_at: result.fetched_at || new Date().toISOString(),
       });
       if (!playground.isPlayground.value) void refreshCredit();
-      await router.push(`/app/simulation/${simId}/results`);
+      await router.push({
+        path: `/app/simulation/${simId}/results`,
+        query: { run_id: result.run_id },
+      });
     } else {
       runError.value = "Simulation returned an unexpected response.";
     }
@@ -488,6 +544,18 @@ watch(
 
 <template>
   <div class="max-w-full pb-16">
+    <Teleport to="body">
+      <Transition name="sim-overlay">
+        <div v-if="running" class="sim-loading-overlay">
+          <div class="sim-loading-card">
+            <Loader2 class="h-7 w-7 animate-spin text-[#5B7BE1]" :stroke-width="2.25" />
+            <p class="sim-loading-title">Running simulation</p>
+            <p class="sim-loading-phase">Waiting for server pipeline…</p>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <PageHeader
       title="Simulation Builder"
       description="Build your campaign simulation once. Choose what you want to analyse."
@@ -698,6 +766,9 @@ watch(
                   <p v-else-if="!assetsLoading && playground.isPlayground.value" class="text-[12px] text-black/35">
                     No example creatives available.
                   </p>
+                  <p v-else-if="assetsError" class="text-[12px] text-rose-700">
+                    {{ assetsError }}
+                  </p>
                   <p v-else-if="!assetsLoading" class="text-[12px] text-black/35">
                     No assets in library.
                     <NuxtLink to="/app/assets/creative" class="text-[#5B7BE1] underline">Upload assets →</NuxtLink>
@@ -882,6 +953,9 @@ watch(
                 {{ conn.label }}
               </div>
             </div>
+            <p v-else-if="connectionsError" class="text-[13px] text-rose-700">
+              Could not load connections ({{ connectionsError }}).
+            </p>
             <p v-else class="text-[13px] text-black/40">
               No connections found.
               <NuxtLink to="/app/connections" class="text-[#5B7BE1] underline">Connect a data source →</NuxtLink>
@@ -964,6 +1038,27 @@ watch(
           </div>
         </div>
 
+        <!-- Agent run plan -->
+        <SurfaceCard v-if="!playground.isPlayground" padding="sm">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-black/40">Run plan</p>
+          <p class="mt-1 text-[12px] leading-relaxed text-black/55">
+            Solvomo will execute these pipeline steps on your saved simulation config, then persist evidence and results server-side.
+          </p>
+          <ol class="mt-2 space-y-1">
+            <li
+              v-for="(step, si) in pipelinePreview"
+              :key="step"
+              class="font-mono text-[11px] text-black/50"
+            >
+              {{ String(si + 1).padStart(2, "0") }}. {{ step }}
+            </li>
+          </ol>
+          <label class="mt-3 flex items-center gap-2 text-[12px] text-black/70">
+            <input v-model="agentPlanApproved" type="checkbox" class="accent-[#5B7BE1]" />
+            I reviewed the plan and want to run this simulation
+          </label>
+        </SurfaceCard>
+
         <!-- Run button + errors -->
         <div class="space-y-2">
           <div v-if="creditError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] font-semibold text-rose-800">
@@ -982,9 +1077,20 @@ watch(
             <Play v-else class="h-4 w-4" :stroke-width="2.5" />
             {{ saving ? "Saving…" : running ? "Running simulation…" : "Run Simulation" }}
           </button>
-          <p class="text-center text-[11px] text-black/35">
+          <p v-if="!playgroundReady" class="flex items-center justify-center gap-1.5 text-center text-[11px] text-black/40">
+            <Loader2 class="h-3 w-3 animate-spin" :stroke-width="2.5" />
+            Preparing sandbox data…
+          </p>
+          <p v-else class="text-center text-[11px] text-black/35">
             Analysis focus: <strong class="text-black/55">{{ FOCUS_OPTIONS.find(o => o.tab === analysisTab)?.label }}</strong>
           </p>
+          <NuxtLink
+            v-if="editingSimId"
+            :to="`/app/simulation/${editingSimId}/runs`"
+            class="block text-center text-[11px] text-[#5B7BE1] underline"
+          >
+            View run history
+          </NuxtLink>
           <button
             v-if="editingSimId"
             type="button"
@@ -1021,5 +1127,166 @@ watch(
 }
 .sim-label {
   @apply block text-[11px] font-bold uppercase tracking-wide text-black/40;
+}
+
+/* ── Animated run/loading overlay ─────────────────────────────────────────── */
+.sim-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(248, 249, 251, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.sim-loading-card {
+  display: flex;
+  width: 100%;
+  max-width: 24rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  border-radius: var(--sv-radius-card, 24px);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: #fff;
+  padding: 2.4rem 2rem;
+  box-shadow: 0 30px 80px -40px rgba(15, 23, 42, 0.4);
+}
+
+.sim-loading-orb {
+  position: relative;
+  display: flex;
+  height: 4.5rem;
+  width: 4.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.sim-loading-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid rgba(91, 123, 225, 0.4);
+  animation: sim-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.sim-loading-ring--delayed {
+  animation-delay: 0.9s;
+}
+
+.sim-loading-spinner {
+  position: relative;
+  color: #5b7be1;
+}
+
+.sim-loading-title {
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--sv-text, #0f172a);
+}
+
+.sim-loading-phase {
+  min-height: 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 540;
+  color: var(--sv-text-soft, rgba(15, 23, 42, 0.55));
+}
+
+.sim-loading-dots::after {
+  content: "";
+  animation: sim-ellipsis 1.4s steps(4, end) infinite;
+}
+
+.sim-loading-track {
+  height: 6px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.07);
+}
+
+.sim-loading-bar {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #5b7be1, #8b5cf6);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sim-loading-steps {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.sim-loading-step-dot {
+  height: 0.4rem;
+  width: 0.4rem;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.12);
+  transition: background 0.4s ease, transform 0.4s ease;
+}
+
+.sim-loading-step-dot--done {
+  background: #5b7be1;
+  transform: scale(1.15);
+}
+
+@keyframes sim-ping {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.8;
+  }
+  80%,
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes sim-ellipsis {
+  0% {
+    content: "";
+  }
+  25% {
+    content: ".";
+  }
+  50% {
+    content: "..";
+  }
+  75% {
+    content: "...";
+  }
+}
+
+.sim-overlay-enter-active,
+.sim-overlay-leave-active {
+  transition: opacity 0.25s ease;
+}
+.sim-overlay-enter-from,
+.sim-overlay-leave-to {
+  opacity: 0;
+}
+
+.sim-phase-enter-active,
+.sim-phase-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.sim-phase-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.sim-phase-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sim-loading-ring,
+  .sim-loading-dots::after {
+    animation: none;
+  }
 }
 </style>

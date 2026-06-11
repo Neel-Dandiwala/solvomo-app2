@@ -3,7 +3,7 @@ definePageMeta({ layout: "app" });
 
 useHead({ title: "Settings — Solvomo" });
 
-const auth = useAuth();
+const { displayName, displayEmail } = useAuth();
 const { currentWorkspace, currentBrandProfile } = useWorkspaceContext();
 
 const section = ref<"user" | "workspace" | "brand" | "members" | "api">("user");
@@ -77,7 +77,7 @@ const navSections = [
                   id="settings-fullname"
                   class="app-control w-full"
                   type="text"
-                  :value="auth.displayName"
+                  :value="displayName"
                   readonly
                   autocomplete="name"
                 >
@@ -89,7 +89,7 @@ const navSections = [
                   class="flex min-h-[3rem] w-full items-center rounded-[var(--sv-radius-control)] border border-black/[0.08] bg-white px-4 text-[0.98rem] font-semibold leading-tight tracking-[-0.015em] text-black/88 shadow-[0_10px_24px_-26px_rgba(15,23,42,0.18)]"
                   role="status"
                 >
-                  {{ auth.displayEmail }}
+                  {{ displayEmail }}
                 </div>
               </div>
             </div>
@@ -119,8 +119,8 @@ const navSections = [
             Billing and workspace defaults (not brand-level models).
           </p>
           <p class="mt-6 text-sm text-black/60">
-            Signed in as <span class="font-semibold text-black">{{ auth.displayName }}</span>
-            <span class="text-black/45">· {{ auth.displayEmail }}</span>
+            Signed in as <span class="font-semibold text-black">{{ displayName }}</span>
+            <span class="text-black/45">· {{ displayEmail }}</span>
           </p>
           <label class="mt-6 block text-xs font-bold uppercase tracking-wide text-black/45">Workspace display name</label>
           <input class="auth-input mt-2 max-w-md" type="text" :value="currentWorkspace?.name" readonly>
@@ -171,7 +171,7 @@ const navSections = [
             </li>
           </ul>
           <NuxtLink
-            to="/onboarding/brand-setup"
+            to="/onboarding/brand-setup?edit=1"
             class="button-secondary mt-8 inline-flex rounded-xl px-4 py-2 text-sm font-semibold"
           >
             Brand setup wizard

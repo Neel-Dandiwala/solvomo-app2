@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { AlertTriangle } from "lucide-vue-next";
 import type { SavedWidgetPayload } from "~/types/saved-view";
 
 const props = defineProps<{
@@ -11,6 +12,26 @@ const isBarComparison = computed(
   () => props.widgetSubtype === "bar" && props.payload?.kind === "comparison",
 );
 
+const timeSeriesTicks = computed(() => {
+  if (props.payload?.kind !== "time_series") return [];
+  const labels = props.payload.labels ?? [];
+  if (!labels.length) return [];
+  const indices =
+    labels.length <= 3
+      ? labels.map((_, i) => i)
+      : [0, Math.floor((labels.length - 1) / 2), labels.length - 1];
+  return indices.map((i) => formatDateLabel(labels[i] ?? ""));
+});
+
+function formatDateLabel(label: string) {
+  if (!label) return "";
+  const iso = /^\d{4}-\d{2}-\d{2}$/.test(label) ? `${label}T00:00:00` : label;
+  const parsed = new Date(iso);
+  return Number.isNaN(parsed.getTime())
+    ? label
+    : parsed.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 const chartMax = computed(() => {
   if (props.payload?.kind !== "time_series") return 1;
   return Math.max(...props.payload.series.flatMap((s) => s.values), 1);
@@ -19,6 +40,22 @@ const chartMax = computed(() => {
 const barMax = computed(() => {
   if (props.payload?.kind !== "comparison") return 1;
   return Math.max(...props.payload.items.map((i) => i.value), 1);
+});
+
+const tableColumns = computed(() => {
+  if (props.payload?.kind !== "table") return [];
+  return props.payload.columns.map((col) => ({
+    key: col.key,
+    label: col.label,
+  }));
+});
+
+const tableRows = computed(() => {
+  if (props.payload?.kind !== "table") return [];
+  return props.payload.rows.map((row, index) => ({
+    ...row,
+    id: `row-${index}`,
+  }));
 });
 
 function formatValue(value: number, metric?: string) {
@@ -80,6 +117,12 @@ function areaPath(values: number[]) {
         :points="linePoints(series.values)"
       />
     </svg>
+    <div
+      v-if="timeSeriesTicks.length"
+      class="flex justify-between text-[10px] font-medium tabular-nums text-black/40"
+    >
+      <span v-for="(tick, idx) in timeSeriesTicks" :key="`${tick}-${idx}`">{{ tick }}</span>
+    </div>
     <div class="flex flex-wrap gap-2">
       <span
         v-for="series in payload.series"
@@ -121,29 +164,31 @@ function areaPath(values: number[]) {
     </div>
   </div>
 
-  <div v-else-if="payload?.kind === 'table'" class="overflow-x-auto">
-    <table class="min-w-full text-left text-[12px]">
-      <thead class="text-black/40">
-        <tr>
-          <th v-for="col in payload.columns" :key="col.key" class="px-2 py-1 font-semibold">
-            {{ col.label }}
-          </th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-black/[0.05]">
-        <tr v-for="(row, idx) in payload.rows" :key="idx">
-          <td v-for="col in payload.columns" :key="col.key" class="px-2 py-1.5 text-black/65">
-            {{ row[col.key] }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <DataTable
+    v-else-if="payload?.kind === 'table'"
+    :columns="tableColumns"
+    :rows="tableRows"
+    row-key="id"
+    embed
+  />
 
   <EmptyState
-    v-else
+    v-else-if="payload?.kind === 'empty'"
     class="border-0 bg-transparent px-0 py-0 text-left"
     title="No data"
-    :description="payload?.kind === 'empty' ? payload.message : 'No payload returned for this widget.'"
+    :description="payload.message"
   />
+
+  <div
+    v-else
+    class="flex items-start gap-2 rounded-xl border border-amber-300/70 bg-amber-50/70 px-3 py-2.5 text-left"
+  >
+    <AlertTriangle class="mt-0.5 h-4 w-4 shrink-0 text-amber-600" :stroke-width="1.9" />
+    <div class="min-w-0">
+      <p class="text-[12px] font-semibold text-amber-900">Metric unavailable</p>
+      <p class="mt-0.5 text-[11px] leading-4 text-amber-800/80">
+        This widget's data could not be loaded. Try refreshing the view.
+      </p>
+    </div>
+  </div>
 </template>

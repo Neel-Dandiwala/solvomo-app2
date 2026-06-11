@@ -1,18 +1,22 @@
-import type { SavedViewDetail, SavedViewListItem } from "~/types/saved-view";
+import type { DashboardViewListItem, SavedViewDetail } from "~/types/saved-view";
 import { brandScopeQuery } from "~/utils/apiScope";
 
 /**
- * Mongo-backed overview views via `GET /views`, `GET /views/:id`, `POST /views`, `PATCH /views/:id`.
+ * Shared saved dashboard view state.
+ *
+ * The list uses the dashboard endpoint because it includes lightweight counts
+ * needed by dashboard cards, while detail/CRUD remains on `/views`.
  */
 export function useOverviewViews() {
   const api = useApiClient();
   const auth = useAuth();
   const workspace = useWorkspaceContext();
 
-  const views = useState<SavedViewListItem[]>("sv-saved-views", () => []);
+  const views = useState<DashboardViewListItem[]>("sv-saved-views", () => []);
   const viewsLoaded = useState<boolean>("sv-saved-views-loaded", () => false);
   const viewsLoading = useState<boolean>("sv-saved-views-loading", () => false);
   const viewsError = useState<string | null>("sv-saved-views-error", () => null);
+  const viewsLoadedScopeKey = useState<string>("sv-saved-views-loaded-scope", () => "");
 
   const selectedViewId = useState<string | null>("sv-selected-view-id", () => null);
   const currentViewDetail = useState<SavedViewDetail | null>("sv-current-view-detail", () => null);
@@ -24,25 +28,41 @@ export function useOverviewViews() {
     return brandScopeQuery(ws, bp);
   }
 
+  function scopeKey() {
+    const ws = workspace.currentWorkspaceId.value?.trim();
+    const bp = workspace.currentBrandProfileId.value?.trim();
+    return ws && bp ? `${ws}:${bp}` : "";
+  }
+
+  function resetViews() {
+    views.value = [];
+    viewsLoaded.value = false;
+    viewsLoadedScopeKey.value = "";
+  }
+
   async function refreshViews(options?: { force?: boolean }) {
     if (!auth.isAuthenticated.value || !api.hasBase.value) {
-      views.value = [];
-      viewsLoaded.value = false;
+      resetViews();
       viewsError.value = null;
       return [];
     }
-    if (!viewsQueryString()) {
-      views.value = [];
+    const qs = viewsQueryString();
+    if (!qs) {
+      resetViews();
       return [];
+    }
+    if (viewsLoaded.value && viewsLoadedScopeKey.value === scopeKey() && !options?.force) {
+      return views.value;
     }
     viewsLoading.value = true;
     viewsError.value = null;
     try {
-      const res = await api.getJson<{ views: SavedViewListItem[] }>(
-        `/views${viewsQueryString()}`,
+      const res = await api.getJson<{ views: DashboardViewListItem[] }>(
+        `/dashboard/views${qs}`,
       );
       views.value = res.views || [];
       viewsLoaded.value = true;
+      viewsLoadedScopeKey.value = scopeKey();
 
       if (!selectedViewId.value && views.value.length) {
         const def = views.value.find((v) => v.is_default);
@@ -50,9 +70,12 @@ export function useOverviewViews() {
       }
 
       return views.value;
-    } catch {
-      views.value = [];
+    } catch (e) {
+      resetViews();
       viewsError.value = "Could not load saved views.";
+      if (e instanceof Error && e.message) {
+        viewsError.value = e.message;
+      }
       return [];
     } finally {
       viewsLoading.value = false;
@@ -67,8 +90,9 @@ export function useOverviewViews() {
       );
       currentViewDetail.value = detail;
       return detail;
-    } catch {
+    } catch (e) {
       currentViewDetail.value = null;
+      viewsError.value = e instanceof Error && e.message ? e.message : "Could not load this view.";
       return null;
     }
   }
@@ -84,8 +108,7 @@ export function useOverviewViews() {
     async ([userId, hasBase], prev) => {
       const [prevUserId, prevHasBase] = prev ?? ["", false];
       if (!userId || !hasBase) {
-        views.value = [];
-        viewsLoaded.value = false;
+        resetViews();
         selectedViewId.value = null;
         currentViewDetail.value = null;
         return;

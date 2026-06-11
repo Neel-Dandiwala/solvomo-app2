@@ -1,6 +1,6 @@
 {
   "manifestVersion": 2,
-  "generated_at": "2026-06-08T04:10:51.690Z",
+  "generated_at": "2026-06-11T00:33:44.630Z",
   "source": "api/src/integrations/registry.ts",
   "integrations": [
     {

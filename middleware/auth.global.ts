@@ -41,8 +41,15 @@ export default defineNuxtRouteMiddleware(async (to) => {
     if (!auth.isAuthenticated.value) {
       return navigateTo({ path: "/", query: { redirect: to.fullPath } });
     }
-    if (onboardingComplete) {
+    // Allow completed users to re-open the brand-setup wizard from Settings via
+    // `?edit=1` so they can edit their brand profile after onboarding.
+    const isBrandEdit =
+      path === ONBOARDING_ROUTE_BY_STEP.brand && to.query.edit != null;
+    if (onboardingComplete && !isBrandEdit) {
       return navigateTo("/app");
+    }
+    if (isBrandEdit) {
+      return;
     }
 
     if (path === "/onboarding" || path === "/onboarding/") {

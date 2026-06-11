@@ -1,7 +1,6 @@
 import type {
   DashboardHomeResponse,
   DashboardTemplatesResponse,
-  DashboardViewListItem,
   DashboardTemplateSuggestion,
   SavedViewDetail,
 } from "~/types/saved-view";
@@ -15,8 +14,8 @@ export function useDashboardTab() {
   const auth = useAuth();
   const workspace = useWorkspaceContext();
   const { userConnections } = useConnectionsData();
+  const { views, refreshViews: refreshSavedViews } = useOverviewViews();
 
-  const views = useState<DashboardViewListItem[]>("sv-dashboard-tab-views", () => []);
   const templates = useState<DashboardTemplateSuggestion[]>(
     "sv-dashboard-tab-templates",
     () => [],
@@ -91,15 +90,7 @@ export function useDashboardTab() {
   }
 
   async function refreshViews() {
-    const qs = scopeQuery();
-    if (!qs || !api.hasBase.value) return [];
-    try {
-      const data = await api.getJson<{ views: DashboardViewListItem[] }>(`/dashboard/views${qs}`);
-      views.value = data.views || [];
-      return views.value;
-    } catch {
-      return [];
-    }
+    return refreshSavedViews({ force: true });
   }
 
   async function refreshTemplates() {

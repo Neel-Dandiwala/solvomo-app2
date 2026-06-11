@@ -328,27 +328,26 @@ useHead(() => ({ title: `${pageTitle.value} — Solvomo` }));
 
 <template>
   <div class="max-w-full space-y-5 overflow-x-hidden pb-2">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-      <div>
-        <button
-          type="button"
-          class="mb-2 text-[12px] font-medium text-black/50 transition hover:text-black/75"
-          @click="router.push('/app/dashboards')"
-        >
-          ← All dashboards
-        </button>
-        <p class="text-[22px] font-semibold tracking-[-0.03em] text-black">
-          {{ pageTitle }}
-        </p>
-      </div>
+    <div>
       <button
         type="button"
-        class="app-button button-primary px-4 py-2 text-sm text-white"
-        :disabled="!datasourceDrafts.length"
-        @click="openAddWidget"
+        class="mb-2 text-[12px] font-medium text-black/50 transition hover:text-black/75"
+        @click="router.push('/app/dashboards')"
       >
-        Add widget
+        ← All dashboards
       </button>
+      <PageHeader :title="pageTitle" dense hide-context>
+        <template #actions>
+          <button
+            type="button"
+            class="app-button button-primary px-4 py-2 text-sm text-white"
+            :disabled="!datasourceDrafts.length"
+            @click="openAddWidget"
+          >
+            Add widget
+          </button>
+        </template>
+      </PageHeader>
     </div>
 
     <SurfaceCard v-if="currentViewDetail" variant="soft" padding="md" class="border border-black/[0.06]">

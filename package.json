@@ -13,6 +13,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "favicon": "node scripts/generate-favicon.mjs",
+    "audit:ui": "node scripts/audit-ui-consistency.mjs",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
