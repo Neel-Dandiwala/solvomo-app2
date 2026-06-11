@@ -18,7 +18,30 @@ const { integrations, loading, error: directoryError, refresh: refreshDirectory 
   useConnectionsTab();
 const { refreshUserConnections } = useConnectionsData();
 
-const VENDOR_APP_OAUTH_SLUGS = new Set(["metaads", "instagram", "tiktok"]);
+const VENDOR_APP_OAUTH_SLUGS = new Set([
+  "metaads",
+  "googleads",
+  "googledv360",
+  "googlecm360",
+  "googlesa360",
+  "instagram",
+  "tiktok",
+  "tiktokads",
+  "linkedinads",
+  "redditads",
+  "pinterestads",
+  "snapchatads",
+  "twitterads",
+  "microsoftads",
+  "linkedin",
+  "threads",
+  "facebook",
+  "youtube",
+]);
+const API_KEY_CONNECT_SLUGS = new Set(["openaiads"]);
+
+const apiKeyModalItem = ref<ConnectionsDirectoryItem | null>(null);
+const apiKeyInput = ref("");
 
 const search = ref("");
 const statusFilter = ref<"all" | "active" | "inactive">("all");
@@ -73,6 +96,53 @@ async function activatePlayground(item: ConnectionsDirectoryItem) {
   } finally {
     connectBusySlug.value = null;
   }
+}
+
+function isApiKeyConnector(slug: string): boolean {
+  return API_KEY_CONNECT_SLUGS.has(slug.trim());
+}
+
+async function connectApiKey(item: ConnectionsDirectoryItem) {
+  actionError.value = null;
+  const slug = item.slug.trim();
+  const apiKey = apiKeyInput.value.trim();
+  const brandprofileId = workspace.currentBrandProfileId.value?.trim();
+  if (!slug || !apiKey || !brandprofileId || !api.hasBase.value) {
+    actionError.value = "Enter your Ads API key and select a brand profile to connect.";
+    return;
+  }
+
+  connectBusySlug.value = slug;
+  try {
+    await api.postJson("/auth/connections/api-key/connect", {
+      connection_slug: slug,
+      api_key: apiKey,
+      brandprofile_id: brandprofileId,
+    });
+    apiKeyModalItem.value = null;
+    apiKeyInput.value = "";
+    await refreshDirectory();
+    await refreshUserConnections({ force: true });
+    if (typeof window !== "undefined") {
+      const origin = window.location.origin;
+      window.location.href = `${origin}/app/connections?connected=${encodeURIComponent(slug)}`;
+    }
+  } catch {
+    actionError.value = "Could not connect with that API key. Check the key and try again.";
+  } finally {
+    connectBusySlug.value = null;
+  }
+}
+
+function openConnectFlow(item: ConnectionsDirectoryItem) {
+  const slug = item.slug.trim();
+  if (isApiKeyConnector(slug)) {
+    actionError.value = null;
+    apiKeyInput.value = "";
+    apiKeyModalItem.value = item;
+    return;
+  }
+  void connect(item);
 }
 
 async function connect(item: ConnectionsDirectoryItem) {
@@ -333,10 +403,53 @@ watch(
           :connect-busy="connectBusySlug === item.slug"
           :deactivate-busy="deactivateBusyId === item.connection_id"
           :show-sign-in-hint="!loggedIn || !api.hasBase"
-          @connect="connect(item)"
+          @connect="openConnectFlow(item)"
           @deactivate="deactivate(item)"
         />
       </div>
+
+      <SurfaceCard
+        v-if="apiKeyModalItem"
+        variant="frame"
+        padding="md"
+        class="fixed inset-x-4 bottom-6 z-50 mx-auto max-w-md border border-black/10 bg-white shadow-xl sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2"
+      >
+        <p class="text-[15px] font-semibold text-black">
+          Connect {{ apiKeyModalItem.name }}
+        </p>
+        <p class="mt-1 text-[13px] text-black/55">
+          Paste your OpenAI Ads API key from Ads Manager Settings. This uses
+          <span class="font-medium">api.ads.openai.com</span>, not platform keys.
+        </p>
+        <label class="mt-4 block text-[12px] font-semibold uppercase tracking-wide text-black/45">
+          Ads API key
+        </label>
+        <input
+          v-model="apiKeyInput"
+          type="password"
+          autocomplete="off"
+          class="app-control mt-1.5 min-h-[2.75rem] w-full"
+          placeholder="sk-…"
+        >
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="app-button button-primary min-h-[2.75rem] px-4 text-sm"
+            :disabled="connectBusySlug === apiKeyModalItem.slug"
+            @click="connectApiKey(apiKeyModalItem)"
+          >
+            {{ connectBusySlug === apiKeyModalItem.slug ? "Connecting…" : "Connect" }}
+          </button>
+          <button
+            type="button"
+            class="app-button button-secondary min-h-[2.75rem] px-4 text-sm"
+            :disabled="connectBusySlug === apiKeyModalItem.slug"
+            @click="apiKeyModalItem = null"
+          >
+            Cancel
+          </button>
+        </div>
+      </SurfaceCard>
 
       <SurfaceCard
         v-if="!filteredItems.length && integrations.length"

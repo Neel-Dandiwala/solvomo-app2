@@ -1,6 +1,6 @@
 {
   "manifestVersion": 2,
-  "generated_at": "2026-06-11T00:33:44.630Z",
+  "generated_at": "2026-06-11T01:43:05.310Z",
   "source": "api/src/integrations/registry.ts",
   "integrations": [
     {
@@ -50,6 +50,18 @@
           }
         },
         "ads_campaign": {
+          "inbound_fields": {
+            "name": "supported",
+            "organization_id": "supported",
+            "account_id": "supported",
+            "goal": "supported",
+            "status": "supported",
+            "budget_amount": "supported",
+            "budget_period": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "category": "supported"
+          },
           "outbound_fields": {
             "id": "supported",
             "account_id": "supported",
@@ -71,12 +83,28 @@
           "methods": {
             "list": true,
             "get": true,
-            "create": false,
-            "update": false,
-            "remove": false
+            "create": true,
+            "update": true,
+            "remove": true
           }
         },
         "ads_group": {
+          "inbound_fields": {
+            "name": "supported",
+            "organization_id": "supported",
+            "campaign_id": "supported-required",
+            "status": "supported",
+            "targeting": "supported",
+            "budget_amount": "supported",
+            "budget_period": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "bid_amount": "supported",
+            "bid_strategy": "supported",
+            "optimization_goal": "supported",
+            "billing_event": "supported",
+            "promoted": "supported"
+          },
           "outbound_fields": {
             "id": "supported",
             "campaign_id": "supported",
@@ -91,14 +119,18 @@
             "budget_period": "supported",
             "optimization_goal": "supported",
             "billing_event": "supported",
-            "bid_strategy_label": "supported"
+            "bid_strategy_label": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "bid_amount": "supported",
+            "promoted": "supported"
           },
           "methods": {
             "list": true,
             "get": true,
-            "create": false,
-            "update": false,
-            "remove": false
+            "create": true,
+            "update": true,
+            "remove": true
           }
         },
         "ads_target": {
@@ -171,6 +203,13 @@
           }
         },
         "ads_ad": {
+          "inbound_fields": {
+            "name": "supported",
+            "organization_id": "supported",
+            "ad_group_id": "supported-required",
+            "status": "supported",
+            "creative_ids": "supported"
+          },
           "outbound_fields": {
             "id": "supported",
             "campaign_id": "supported",
@@ -185,6 +224,21 @@
             "creative_asset_url": "supported",
             "ad_copy": "supported",
             "headline": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_promoted": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "name": "supported",
+            "promoted_type": "supported"
           },
           "methods": {
             "list": true,
@@ -280,10 +334,2115 @@
             "body": {
               "slug": "Registry slug (e.g. metaads).",
               "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
-              "brandProfileId": "Optional; ties the connection to the current brand profile.",
-              "successRedirectUrl": "Absolute URL — API redirects here after OAuth success.",
-              "failureRedirectUrl": "Absolute URL — API redirects here on OAuth error.",
-              "clientState": "Optional opaque string echoed to success redirect."
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "googleads",
+      "slug": "googleads",
+      "name": "Google Ads",
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "categories": [
+        "ads",
+        "auth"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "ads_organization": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "name": "supported",
+            "currency": "supported",
+            "time_zone": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_campaign": {
+          "inbound_fields": {
+            "organization_id": "supported",
+            "name": "supported-required",
+            "status": "supported",
+            "budget_amount": "supported",
+            "budget_period": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "targeting": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "budget_amount": "supported",
+            "budget_period": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "targeting": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_group": {
+          "inbound_fields": {
+            "organization_id": "supported",
+            "campaign_id": "supported-required",
+            "name": "supported-required",
+            "status": "supported",
+            "bid_amount": "supported",
+            "promoted": "supported",
+            "targeting": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "campaign_id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "targeting": "supported",
+            "bid_amount": "supported",
+            "promoted": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": false
+          }
+        },
+        "ads_ad": {
+          "inbound_fields": {
+            "organization_id": "supported",
+            "group_id": "supported-required",
+            "name": "supported-required",
+            "status": "supported",
+            "headline": "supported",
+            "description": "supported",
+            "final_url": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "campaign_id": "supported",
+            "group_id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "headline": "supported",
+            "description": "supported",
+            "final_url": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": true
+          }
+        },
+        "ads_creative": {
+          "inbound_fields": {
+            "organization_id": "supported",
+            "group_id": "supported-required",
+            "name": "supported-required",
+            "asset_urls": "supported",
+            "link_url": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "asset_urls": "supported",
+            "link_url": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": true
+          }
+        },
+        "ads_target": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "target_type": "supported",
+            "value": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "organization_id": "supported",
+            "currency": "supported",
+            "metrics": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "created_at": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_promoted": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "promoted_type": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "metric_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "type": "supported",
+            "unit": "supported",
+            "metric": "supported",
+            "value": "supported",
+            "currency": "supported",
+            "account_id": "supported",
+            "campaign_id": "supported",
+            "group_id": "supported",
+            "ad_id": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "Google Ads API — campaigns, ad groups, ads, reporting (GAQL).",
+      "logo_file": "googleads.png",
+      "overview": "Google Ads: Google Ads API — campaigns, ad groups, ads, reporting (GAQL). OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: https://www.googleapis.com/auth/adwords. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "providerDocsUrl": "https://developers.google.com/google-ads/api/docs/oauth/overview",
+          "defaultScopes": [
+            "https://www.googleapis.com/auth/adwords"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "apiBaseUrl": "https://googleads.googleapis.com"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "googledv360",
+      "slug": "googledv360",
+      "name": "Google Display & Video 360",
+      "created_at": "2026-01-15T00:00:00.000Z",
+      "categories": [
+        "ads",
+        "auth"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "ads_organization": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "currency": "supported",
+            "time_zone": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_campaign": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "organization_id": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_insertionorder": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "campaign_id": "supported",
+            "organization_id": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_group": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "campaign_id": "supported",
+            "organization_id": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": false
+          }
+        },
+        "ads_ad": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "group_id": "supported",
+            "campaign_id": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_creative": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "organization_id": "supported",
+            "asset_urls": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_target": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "target_type": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "organization_id": "supported",
+            "metrics": "supported",
+            "start_at": "supported",
+            "end_at": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "DV360 API — partners, advertisers, campaigns, insertion orders, reporting.",
+      "logo_file": "googledv360.png",
+      "overview": "Google Display & Video 360: DV360 API — partners, advertisers, campaigns, insertion orders, reporting. OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: https://www.googleapis.com/auth/display-video. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "defaultScopes": [
+            "https://www.googleapis.com/auth/display-video"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "apiBaseUrl": "https://displayvideo.googleapis.com"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "googlecm360",
+      "slug": "googlecm360",
+      "name": "Google Campaign Manager 360",
+      "created_at": "2026-02-15T00:00:00.000Z",
+      "categories": [
+        "ads",
+        "auth"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "ads_organization": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_campaign": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "organization_id": "supported",
+            "status": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_group": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "campaign_id": "supported",
+            "organization_id": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_ad": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "group_id": "supported",
+            "campaign_id": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_creative": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "asset_urls": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "organization_id": "supported",
+            "metrics": "supported",
+            "start_at": "supported",
+            "end_at": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "CM360 API — profiles, advertisers, campaigns, placements, reporting.",
+      "logo_file": "googlecm360.png",
+      "overview": "Google Campaign Manager 360: CM360 API — profiles, advertisers, campaigns, placements, reporting. OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: https://www.googleapis.com/auth/dfatrafficking. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "defaultScopes": [
+            "https://www.googleapis.com/auth/dfatrafficking"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "apiBaseUrl": "https://dfareporting.googleapis.com"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "googlesa360",
+      "slug": "googlesa360",
+      "name": "Google Search Ads 360",
+      "created_at": "2026-03-01T00:00:00.000Z",
+      "categories": [
+        "ads",
+        "auth"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "ads_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "organization_id": "supported",
+            "currency": "supported",
+            "metrics": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "created_at": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "Search Ads 360 reporting via DoubleClick Search API (async CSV reports).",
+      "logo_file": "googlesa360.png",
+      "overview": "Google Search Ads 360: Search Ads 360 reporting via DoubleClick Search API (async CSV reports). OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: https://www.googleapis.com/auth/doubleclicksearch. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "defaultScopes": [
+            "https://www.googleapis.com/auth/doubleclicksearch"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "apiBaseUrl": "https://doubleclicksearch.googleapis.com"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "openaiads",
+      "slug": "openaiads",
+      "name": "OpenAI Ads",
+      "created_at": "2026-05-15T00:00:00.000Z",
+      "categories": [
+        "ads"
+      ],
+      "support": {
+        "api_key_connection": {
+          "inbound_fields": {
+            "api_key": "supported-required"
+          },
+          "outbound_fields": {},
+          "methods": {
+            "connectApiKey": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "ads_organization": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "name": "supported",
+            "currency": "supported",
+            "time_zone": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_campaign": {
+          "inbound_fields": {
+            "name": "supported-required",
+            "status": "supported-required",
+            "budget_amount": "supported-required",
+            "budget_period": "supported-required",
+            "start_at": "supported",
+            "end_at": "supported",
+            "targeting": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "status": "supported",
+            "budget_amount": "supported",
+            "budget_period": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "targeting": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_group": {
+          "inbound_fields": {
+            "campaign_id": "supported-required",
+            "name": "supported-required",
+            "status": "supported-required",
+            "bid_amount": "supported-required",
+            "billing_event": "supported-required"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "campaign_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "status": "supported",
+            "bid_amount": "supported",
+            "billing_event": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_ad": {
+          "inbound_fields": {
+            "ad_group_id": "supported-required",
+            "name": "supported-required",
+            "status": "supported-required",
+            "headline": "supported-required",
+            "description": "supported-required",
+            "final_url": "supported-required",
+            "creative_ids": "supported-required"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "ad_group_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "status": "supported",
+            "headline": "supported",
+            "description": "supported",
+            "final_url": "supported",
+            "creative_ids": "supported",
+            "creative_asset_url": "supported",
+            "ad_type": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_creative": {
+          "inbound_fields": {
+            "asset_urls": "supported-required"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "status": "supported",
+            "asset_urls": "supported"
+          },
+          "methods": {
+            "list": false,
+            "get": false,
+            "create": true,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_target": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "name": "supported",
+            "value": "supported",
+            "target_type": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "metrics": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "campaign": "supported",
+            "group": "supported",
+            "ad": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "metric_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "type": "supported",
+            "unit": "supported",
+            "metric": "supported",
+            "value": "supported",
+            "ad_id": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "ChatGPT Ads API — campaigns, ad groups, ads, creatives, and insights via api.ads.openai.com.",
+      "logo_file": "openaiads.png",
+      "overview": "OpenAI Ads: ChatGPT Ads API — campaigns, ad groups, ads, creatives, and insights via api.ads.openai.com. Provide api_key from your OpenAI Ads Manager account. Create an API key in the Settings tab of your OpenAI Ads Manager account. Use the Ads API host https://api.ads.openai.com — separate from api.openai.com platform keys. Flow: app POSTs the API key to POST /auth/connections/api-key/connect.",
+      "configure": {
+        "credentials": [
+          {
+            "key": "api_key",
+            "label": "Api Key",
+            "sensitive": true,
+            "required": true,
+            "source": "credentials_needed"
+          }
+        ],
+        "api_key": {
+          "providerDocsUrl": "https://developers.openai.com/ads/api-quickstart",
+          "tokenInstructions": [
+            "Create an API key in the Settings tab of your OpenAI Ads Manager account.",
+            "Use the Ads API host https://api.ads.openai.com — separate from api.openai.com platform keys."
+          ],
+          "environments": {
+            "production": {
+              "apiBaseUrl": "https://api.ads.openai.com"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "apiKeyConnect": {
+            "method": "POST",
+            "path": "/auth/connections/api-key/connect",
+            "body": {
+              "connection_slug": "Registry slug (e.g. openaiads).",
+              "api_key": "Customer-provided Ads API key (Bearer token).",
+              "brandprofile_id": "Required; ties the connection to the current brand profile.",
+              "vendor_environment": "Optional; defaults to production."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "redditads",
+      "slug": "redditads",
+      "name": "Reddit Ads",
+      "created_at": "2026-06-10T00:00:00.000Z",
+      "categories": [
+        "ads",
+        "auth"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "ads_organization": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "currency": "supported",
+            "time_zone": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_campaign": {
+          "inbound_fields": {
+            "organization_id": "supported-required",
+            "name": "supported-required",
+            "status": "supported",
+            "budget_amount": "supported",
+            "budget_period": "supported",
+            "start_at": "supported",
+            "end_at": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "budget_amount": "supported",
+            "budget_period": "supported",
+            "start_at": "supported",
+            "end_at": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_group": {
+          "inbound_fields": {
+            "organization_id": "supported-required",
+            "campaign_id": "supported-required",
+            "name": "supported-required",
+            "status": "supported",
+            "bid_amount": "supported",
+            "targeting": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "campaign_id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "bid_amount": "supported",
+            "targeting": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_ad": {
+          "inbound_fields": {
+            "organization_id": "supported-required",
+            "group_id": "supported-required",
+            "name": "supported-required",
+            "status": "supported",
+            "headline": "supported",
+            "ad_copy": "supported",
+            "final_url": "supported",
+            "campaign_id": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "group_id": "supported",
+            "campaign_id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "headline": "supported",
+            "ad_copy": "supported",
+            "final_url": "supported",
+            "ad_type": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_creative": {
+          "inbound_fields": {
+            "organization_id": "supported-required",
+            "group_id": "supported-required",
+            "name": "supported-required",
+            "status": "supported",
+            "campaign_id": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "currency": "supported",
+            "metrics": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "organization_id": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_target": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "target_type": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "Reddit Ads API v3",
+      "logo_file": "redditads.png",
+      "overview": "Reddit Ads: Reddit Ads API v3 OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: identity, read, adsread, adsaccount. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "providerDocsUrl": "https://ads-api.reddit.com/docs/v3/",
+          "defaultScopes": [
+            "identity",
+            "read",
+            "adsread",
+            "adsaccount"
+          ],
+          "authorizationParameters": [
+            "response_type",
+            "client_id",
+            "redirect_uri",
+            "scope",
+            "state"
+          ],
+          "tokenParameters": [
+            "grant_type",
+            "client_id",
+            "client_secret",
+            "code",
+            "redirect_uri"
+          ],
+          "refreshParameters": [
+            "grant_type",
+            "client_id",
+            "client_secret",
+            "refresh_token"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://www.reddit.com/api/v1/authorize",
+              "tokenUrl": "https://www.reddit.com/api/v1/access_token",
+              "apiBaseUrl": "https://ads-api.reddit.com/api"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "pinterestads",
+      "slug": "pinterestads",
+      "name": "Pinterest Ads",
+      "created_at": "2026-06-10T00:00:00.000Z",
+      "categories": [
+        "ads"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "ads_organization": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "currency": "supported",
+            "created_at": "supported",
+            "updated_at": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_campaign": {
+          "inbound_fields": {
+            "organization_id": "supported-required",
+            "name": "supported-required",
+            "status": "supported",
+            "budget_amount": "supported",
+            "budget_period": "supported",
+            "start_at": "supported",
+            "end_at": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "budget_amount": "supported",
+            "budget_period": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "created_at": "supported",
+            "updated_at": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_group": {
+          "inbound_fields": {
+            "organization_id": "supported-required",
+            "campaign_id": "supported-required",
+            "name": "supported-required",
+            "status": "supported",
+            "bid_amount": "supported",
+            "targeting": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "campaign_id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "bid_amount": "supported",
+            "targeting": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_ad": {
+          "outbound_fields": {
+            "id": "supported",
+            "group_id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_creative": {
+          "outbound_fields": {
+            "id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "metrics": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "organization_id": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_target": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "target_type": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "Pinterest Ads API v5",
+      "logo_file": "pinterestads.png",
+      "overview": "Pinterest Ads: Pinterest Ads API v5 OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: ads:read, ads:write, user_accounts:read, pins:read. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "providerDocsUrl": "https://developers.pinterest.com/apps/",
+          "defaultScopes": [
+            "ads:read",
+            "ads:write",
+            "user_accounts:read",
+            "pins:read"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://www.pinterest.com/oauth/",
+              "tokenUrl": "https://api.pinterest.com/v5/oauth/token",
+              "apiBaseUrl": "https://api.pinterest.com/v5"
+            },
+            "sandbox": {
+              "authorizationUrl": "https://www.pinterest.com/oauth/",
+              "tokenUrl": "https://api-sandbox.pinterest.com/v5/oauth/token",
+              "apiBaseUrl": "https://api-sandbox.pinterest.com/v5"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "linkedinads",
+      "slug": "linkedinads",
+      "name": "LinkedIn Ads",
+      "created_at": "2026-06-10T00:00:00.000Z",
+      "categories": [
+        "ads"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "ads_organization": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "currency": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_campaign": {
+          "inbound_fields": {
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "budget_amount": "supported",
+            "start_at": "supported",
+            "end_at": "supported"
+          },
+          "outbound_fields": {
+            "id": "supported",
+            "organization_id": "supported",
+            "name": "supported",
+            "status": "supported",
+            "start_at": "supported",
+            "end_at": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_promoted": {
+          "outbound_fields": {
+            "id": "supported",
+            "name": "supported",
+            "promoted_type": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "LinkedIn Marketing API (ads only)",
+      "logo_file": "linkedinads.png",
+      "overview": "LinkedIn Ads: LinkedIn Marketing API (ads only) OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: r_ads, rw_ads, r_ads_reporting, w_organization_social. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "providerDocsUrl": "https://developer.linkedin.com",
+          "defaultScopes": [
+            "r_ads",
+            "rw_ads",
+            "r_ads_reporting",
+            "w_organization_social"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://www.linkedin.com/oauth/v2/authorization",
+              "tokenUrl": "https://www.linkedin.com/oauth/v2/accessToken",
+              "apiBaseUrl": "https://api.linkedin.com"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "microsoftads",
+      "slug": "microsoftads",
+      "name": "Microsoft Advertising",
+      "created_at": "2026-06-10T00:00:00.000Z",
+      "categories": [
+        "ads",
+        "auth"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        }
+      },
+      "in_progress": true,
+      "description": "Microsoft Advertising API (Bing Ads)",
+      "logo_file": "microsoftads.png",
+      "overview": "Microsoft Advertising: Microsoft Advertising API (Bing Ads) OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: https://ads.microsoft.com/msads.manage, offline_access. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "defaultScopes": [
+            "https://ads.microsoft.com/msads.manage",
+            "offline_access"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+              "tokenUrl": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+              "apiBaseUrl": "https://campaign.api.bingads.microsoft.com"
+            },
+            "sandbox": {
+              "authorizationUrl": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+              "tokenUrl": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+              "apiBaseUrl": "https://campaign.api.sandbox.bingads.microsoft.com"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "snapchatads",
+      "slug": "snapchatads",
+      "name": "Snapchat Ads",
+      "created_at": "2026-06-10T00:00:00.000Z",
+      "categories": [
+        "ads",
+        "auth"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        }
+      },
+      "in_progress": true,
+      "description": "Snapchat Marketing API",
+      "logo_file": "snapchatads.png",
+      "overview": "Snapchat Ads: Snapchat Marketing API OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: snapchat-marketing-api. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "defaultScopes": [
+            "snapchat-marketing-api"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://accounts.snapchat.com/accounts/oauth2/auth",
+              "tokenUrl": "https://accounts.snapchat.com/accounts/oauth2/token",
+              "apiBaseUrl": "https://adsapi.snapchat.com/v1"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "twitterads",
+      "slug": "twitterads",
+      "name": "X Ads",
+      "created_at": "2026-06-10T00:00:00.000Z",
+      "categories": [
+        "ads"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        }
+      },
+      "in_progress": true,
+      "description": "X (Twitter) Ads API",
+      "logo_file": "twitterads.png",
+      "overview": "X Ads: X (Twitter) Ads API OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: tweet.read, users.read, offline.access. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "defaultScopes": [
+            "tweet.read",
+            "users.read",
+            "offline.access"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://twitter.com/i/oauth2/authorize",
+              "tokenUrl": "https://api.twitter.com/2/oauth2/token",
+              "apiBaseUrl": "https://ads-api.x.com"
+            },
+            "sandbox": {
+              "authorizationUrl": "https://twitter.com/i/oauth2/authorize",
+              "tokenUrl": "https://api.twitter.com/2/oauth2/token",
+              "apiBaseUrl": "https://ads-api-sandbox.x.com"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "tiktokads",
+      "slug": "tiktokads",
+      "name": "TikTok Ads",
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "categories": [
+        "ads",
+        "auth"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "ads_organization": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
+            "name": "supported",
+            "currency": "supported",
+            "time_zone": "supported",
+            "parent_id": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_campaign": {
+          "outbound_fields": {
+            "id": "supported",
+            "account_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "status": "supported",
+            "start_at": "not-supported",
+            "end_at": "not-supported",
+            "budget_amount": "supported",
+            "budget_period": "supported",
+            "goal": "supported",
+            "objective": "not-supported",
+            "daily_budget_minor": "not-supported",
+            "lifetime_budget_minor": "not-supported",
+            "category": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_group": {
+          "outbound_fields": {
+            "id": "supported",
+            "campaign_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "status": "supported",
+            "targeting": "not-supported",
+            "bid_strategy": "not-supported",
+            "bid_amount": "not-supported",
+            "budget_amount": "supported",
+            "budget_period": "not-supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "optimization_goal": "not-supported",
+            "billing_event": "not-supported",
+            "pacing": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_ad": {
+          "outbound_fields": {
+            "id": "supported",
+            "campaign_id": "supported",
+            "ad_group_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "status": "supported",
+            "headline": "not-supported",
+            "description": "supported",
+            "ad_copy": "supported",
+            "creative_ids": "supported",
+            "final_url": "supported",
+            "cta": "supported",
+            "ad_type": "supported",
+            "creative_asset_url": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_creative": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "status": "supported",
+            "organization_id": "supported",
+            "campaign_id": "supported",
+            "group_id": "supported",
+            "creative_type": "supported",
+            "hosting_source": "supported",
+            "link_url": "supported",
+            "body": "supported",
+            "title": "not-supported",
+            "cta": "supported",
+            "asset_urls": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
+            "currency": "supported",
+            "metrics": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "organization_id": "supported",
+            "campaign": "supported",
+            "group": "supported",
+            "ad": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "ads_target": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
+            "name": "supported",
+            "value": "supported",
+            "target_type": "supported",
+            "spec": "not-supported",
+            "label": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "metric_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "type": "supported",
+            "unit": "supported",
+            "metric": "supported",
+            "value": "supported",
+            "currency": "supported",
+            "account_id": "supported",
+            "campaign_id": "supported",
+            "group_id": "supported",
+            "ad_id": "supported",
+            "target_id": "not-supported",
+            "sub_items": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "TikTok Marketing API (campaign management & reporting).",
+      "logo_file": "tiktokads.png",
+      "overview": "TikTok Ads: TikTok Marketing API (campaign management & reporting). OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: user.info.basic, ad.account.bc.get, ad.account.user.get, campaign.get, adgroup.get, ad.get, reporting.get. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "providerDocsUrl": "https://ads.tiktok.com/marketing_api/docs?id=1738855099573250",
+          "defaultScopes": [
+            "user.info.basic",
+            "ad.account.bc.get",
+            "ad.account.user.get",
+            "campaign.get",
+            "adgroup.get",
+            "ad.get",
+            "reporting.get"
+          ],
+          "authorizationParameters": [
+            "client_id",
+            "state",
+            "redirect_uri",
+            "scope",
+            "response_type"
+          ],
+          "redirectTokenParameters": [],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://business-api.tiktok.com/portal/auth",
+              "tokenUrl": "https://business-api.tiktok.com/open_api/v1.3/oauth2/access_token/",
+              "apiBaseUrl": "https://business-api.tiktok.com"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
             }
           }
         },
@@ -495,10 +2654,10 @@
             "body": {
               "slug": "Registry slug (e.g. metaads).",
               "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
-              "brandProfileId": "Optional; ties the connection to the current brand profile.",
-              "successRedirectUrl": "Absolute URL — API redirects here after OAuth success.",
-              "failureRedirectUrl": "Absolute URL — API redirects here on OAuth error.",
-              "clientState": "Optional opaque string echoed to success redirect."
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
             }
           }
         },
@@ -517,7 +2676,7 @@
       "name": "TikTok",
       "created_at": "2025-08-14T00:00:00.000Z",
       "categories": [
-        "ads",
+        "social",
         "auth",
         "passthrough"
       ],
@@ -656,9 +2815,9 @@
         }
       },
       "in_progress": false,
-      "description": "TikTok Login Kit + Business API (Accounts).",
+      "description": "TikTok social only (Login Kit + Business API). Ads use the separate `tiktokads` connector.",
       "logo_file": "tiktok.png",
-      "overview": "TikTok: TikTok Login Kit + Business API (Accounts). OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: user.info.basic. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "overview": "TikTok: TikTok social only (Login Kit + Business API). Ads use the separate `tiktokads` connector. OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: user.info.basic. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
       "configure": {
         "credentials": [],
         "oauth": {
@@ -707,10 +2866,887 @@
             "body": {
               "slug": "Registry slug (e.g. metaads).",
               "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
-              "brandProfileId": "Optional; ties the connection to the current brand profile.",
-              "successRedirectUrl": "Absolute URL — API redirects here after OAuth success.",
-              "failureRedirectUrl": "Absolute URL — API redirects here on OAuth error.",
-              "clientState": "Optional opaque string echoed to success redirect."
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "linkedin",
+      "slug": "linkedin",
+      "name": "LinkedIn",
+      "created_at": "2026-06-10T00:00:00.000Z",
+      "categories": [
+        "social",
+        "auth"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "social_account": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
+            "status": "supported",
+            "username": "supported",
+            "display_name": "supported",
+            "biography": "not-supported",
+            "profile_image_url": "not-supported",
+            "profile_url": "supported",
+            "follower_count": "not-supported",
+            "following_count": "not-supported",
+            "media_count": "not-supported",
+            "is_verified": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_post": {
+          "outbound_fields": {
+            "id": "supported",
+            "account_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "caption": "supported",
+            "status": "supported",
+            "permalink": "not-supported",
+            "published_at": "supported",
+            "web_url": "supported",
+            "media": "supported",
+            "thumbnail_url": "not-supported",
+            "expires_at": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_media": {
+          "outbound_fields": {
+            "id": "supported",
+            "type": "supported",
+            "url": "supported",
+            "thumbnail_url": "not-supported",
+            "alt_text": "not-supported",
+            "duration_seconds": "not-supported",
+            "width": "not-supported",
+            "height": "not-supported",
+            "mime_type": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_comment": {
+          "outbound_fields": {
+            "id": "supported",
+            "post_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "text": "supported",
+            "status": "supported",
+            "parent_id": "not-supported",
+            "parent_comment_id": "not-supported",
+            "author_account_id": "supported",
+            "author_external_id": "supported",
+            "author_username": "not-supported",
+            "like_count": "not-supported",
+            "reply_count": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "metric_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "type": "supported",
+            "unit": "supported",
+            "metric": "supported",
+            "value": "supported",
+            "currency": "not-supported",
+            "account_id": "supported",
+            "campaign_id": "not-supported",
+            "group_id": "not-supported",
+            "ad_id": "not-supported",
+            "target_id": "not-supported",
+            "sub_items": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "LinkedIn organic posts (organization Pages via /rest/posts).",
+      "logo_file": "linkedin.png",
+      "overview": "LinkedIn: LinkedIn organic posts (organization Pages via /rest/posts). OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: openid, profile, email, r_organization_social, w_organization_social. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "providerDocsUrl": "https://developer.linkedin.com",
+          "defaultScopes": [
+            "openid",
+            "profile",
+            "email",
+            "r_organization_social",
+            "w_organization_social"
+          ],
+          "authorizationParameters": [
+            "client_id",
+            "scope",
+            "response_type",
+            "state",
+            "redirect_uri"
+          ],
+          "tokenParameters": [
+            "client_id",
+            "client_secret",
+            "code",
+            "grant_type",
+            "redirect_uri"
+          ],
+          "refreshParameters": [
+            "client_id",
+            "client_secret",
+            "refresh_token",
+            "grant_type"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://www.linkedin.com/oauth/v2/authorization",
+              "tokenUrl": "https://www.linkedin.com/oauth/v2/accessToken",
+              "apiBaseUrl": "https://api.linkedin.com"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "facebook",
+      "slug": "facebook",
+      "name": "Facebook",
+      "created_at": "2023-01-11T00:00:00.000Z",
+      "categories": [
+        "social",
+        "auth"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "social_account": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
+            "status": "supported",
+            "username": "supported",
+            "display_name": "supported",
+            "biography": "not-supported",
+            "profile_image_url": "supported",
+            "profile_url": "supported",
+            "follower_count": "supported",
+            "following_count": "not-supported",
+            "media_count": "not-supported",
+            "is_verified": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_post": {
+          "outbound_fields": {
+            "id": "supported",
+            "account_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "caption": "supported",
+            "status": "supported",
+            "permalink": "supported",
+            "published_at": "supported",
+            "web_url": "supported",
+            "media": "supported",
+            "thumbnail_url": "supported",
+            "expires_at": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_media": {
+          "outbound_fields": {
+            "id": "supported",
+            "type": "supported",
+            "url": "supported",
+            "thumbnail_url": "supported",
+            "alt_text": "not-supported",
+            "duration_seconds": "not-supported",
+            "width": "not-supported",
+            "height": "not-supported",
+            "mime_type": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_comment": {
+          "outbound_fields": {
+            "id": "supported",
+            "post_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "not-supported",
+            "text": "supported",
+            "status": "supported",
+            "parent_id": "not-supported",
+            "parent_comment_id": "not-supported",
+            "author_account_id": "supported",
+            "author_external_id": "supported",
+            "author_username": "supported",
+            "like_count": "supported",
+            "reply_count": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "metric_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "not-supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "type": "supported",
+            "unit": "supported",
+            "metric": "supported",
+            "value": "supported",
+            "currency": "not-supported",
+            "account_id": "supported",
+            "campaign_id": "not-supported",
+            "group_id": "not-supported",
+            "ad_id": "not-supported",
+            "target_id": "not-supported",
+            "sub_items": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "Facebook Pages API (organic posts & comments).",
+      "logo_file": "facebook.png",
+      "overview": "Facebook: Facebook Pages API (organic posts & comments). OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: pages_show_list, pages_read_engagement, pages_read_user_content, pages_manage_posts. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "providerDocsUrl": "https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow/",
+          "defaultScopes": [
+            "pages_show_list",
+            "pages_read_engagement",
+            "pages_read_user_content",
+            "pages_manage_posts"
+          ],
+          "authorizationParameters": [
+            "client_id",
+            "redirect_uri",
+            "state",
+            "scope",
+            "response_type"
+          ],
+          "tokenParameters": [
+            "client_id",
+            "redirect_uri",
+            "client_secret",
+            "code"
+          ],
+          "tokenMethod": "GET",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://www.facebook.com/v25.0/dialog/oauth",
+              "tokenUrl": "https://graph.facebook.com/v25.0/oauth/access_token",
+              "apiBaseUrl": "https://graph.facebook.com/v25.0"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "threads",
+      "slug": "threads",
+      "name": "Threads",
+      "created_at": "2025-08-15T00:00:00.000Z",
+      "categories": [
+        "social",
+        "auth"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "social_account": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
+            "status": "supported",
+            "username": "supported",
+            "display_name": "supported",
+            "biography": "supported",
+            "profile_image_url": "supported",
+            "profile_url": "supported",
+            "follower_count": "not-supported",
+            "following_count": "not-supported",
+            "media_count": "not-supported",
+            "is_verified": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_post": {
+          "outbound_fields": {
+            "id": "supported",
+            "account_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "not-supported",
+            "caption": "supported",
+            "status": "supported",
+            "permalink": "supported",
+            "published_at": "supported",
+            "web_url": "supported",
+            "media": "supported",
+            "thumbnail_url": "supported",
+            "expires_at": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_media": {
+          "outbound_fields": {
+            "id": "supported",
+            "type": "supported",
+            "url": "supported",
+            "thumbnail_url": "supported",
+            "alt_text": "not-supported",
+            "duration_seconds": "not-supported",
+            "width": "not-supported",
+            "height": "not-supported",
+            "mime_type": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_comment": {
+          "outbound_fields": {
+            "id": "supported",
+            "post_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "not-supported",
+            "text": "supported",
+            "status": "supported",
+            "parent_id": "not-supported",
+            "parent_comment_id": "not-supported",
+            "author_account_id": "supported",
+            "author_external_id": "supported",
+            "author_username": "supported",
+            "like_count": "not-supported",
+            "reply_count": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "metric_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "not-supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "type": "supported",
+            "unit": "supported",
+            "metric": "supported",
+            "value": "supported",
+            "currency": "not-supported",
+            "account_id": "supported",
+            "campaign_id": "not-supported",
+            "group_id": "not-supported",
+            "ad_id": "not-supported",
+            "target_id": "not-supported",
+            "sub_items": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "Meta Threads API (organic posts & replies).",
+      "logo_file": "threads.png",
+      "overview": "Threads: Meta Threads API (organic posts & replies). OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: threads_basic, threads_content_publish, threads_manage_replies, threads_read_replies. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "providerDocsUrl": "https://developers.facebook.com/docs/threads/get-started",
+          "defaultScopes": [
+            "threads_basic",
+            "threads_content_publish",
+            "threads_manage_replies",
+            "threads_read_replies"
+          ],
+          "authorizationParameters": [
+            "response_type",
+            "client_id",
+            "redirect_uri",
+            "scope",
+            "state"
+          ],
+          "tokenParameters": [
+            "grant_type",
+            "client_id",
+            "client_secret",
+            "code",
+            "redirect_uri"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://threads.net/oauth/authorize",
+              "tokenUrl": "https://graph.threads.net/oauth/access_token",
+              "apiBaseUrl": "https://graph.threads.net/v1.0"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
+            }
+          }
+        },
+        "app2": {
+          "connectPathTemplate": "/app/connections",
+          "redirects": {
+            "successUrlTemplate": "{origin}/app/connections?connected={slug}",
+            "failureUrlTemplate": "{origin}/app/connections?oauth_error=1"
+          }
+        }
+      }
+    },
+    {
+      "type": "youtube",
+      "slug": "youtube",
+      "name": "YouTube",
+      "created_at": "2025-07-31T00:00:00.000Z",
+      "categories": [
+        "social",
+        "auth",
+        "analytics"
+      ],
+      "support": {
+        "oauth_connection": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "authorize": true,
+            "tokenExchange": true,
+            "refreshToken": true
+          }
+        },
+        "passthrough": {
+          "inbound_fields": {},
+          "outbound_fields": {},
+          "methods": {
+            "callPassthrough": false
+          }
+        },
+        "social_account": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "not-supported",
+            "status": "supported",
+            "username": "supported",
+            "display_name": "supported",
+            "biography": "supported",
+            "profile_image_url": "supported",
+            "profile_url": "supported",
+            "follower_count": "supported",
+            "following_count": "not-supported",
+            "media_count": "supported",
+            "is_verified": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_post": {
+          "outbound_fields": {
+            "id": "supported",
+            "account_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "not-supported",
+            "caption": "supported",
+            "status": "supported",
+            "permalink": "supported",
+            "published_at": "supported",
+            "web_url": "supported",
+            "media": "supported",
+            "thumbnail_url": "supported",
+            "expires_at": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_media": {
+          "outbound_fields": {
+            "id": "supported",
+            "type": "supported",
+            "url": "supported",
+            "thumbnail_url": "supported",
+            "alt_text": "not-supported",
+            "duration_seconds": "supported",
+            "width": "not-supported",
+            "height": "not-supported",
+            "mime_type": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "social_comment": {
+          "outbound_fields": {
+            "id": "supported",
+            "post_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "not-supported",
+            "text": "supported",
+            "status": "supported",
+            "parent_id": "not-supported",
+            "parent_comment_id": "not-supported",
+            "author_account_id": "supported",
+            "author_external_id": "supported",
+            "author_username": "supported",
+            "like_count": "supported",
+            "reply_count": "supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        },
+        "metric_report": {
+          "outbound_fields": {
+            "id": "supported",
+            "external_id": "supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "type": "supported",
+            "unit": "supported",
+            "metric": "supported",
+            "value": "supported",
+            "currency": "not-supported",
+            "account_id": "supported",
+            "campaign_id": "not-supported",
+            "group_id": "not-supported",
+            "ad_id": "not-supported",
+            "target_id": "not-supported",
+            "sub_items": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": false,
+            "create": false,
+            "update": false,
+            "remove": false
+          }
+        }
+      },
+      "in_progress": false,
+      "description": "YouTube channel videos, comments, and Analytics metrics.",
+      "logo_file": "youtube.png",
+      "overview": "YouTube: YouTube channel videos, comments, and Analytics metrics. OAuth app id/secret are configured on the Solvomo API (`.env.vendors`). No extra fields in the app for OAuth app credentials. Default OAuth scopes: openid, profile, email, https://www.googleapis.com/auth/youtube.readonly, https://www.googleapis.com/auth/youtube.force-ssl, https://www.googleapis.com/auth/yt-analytics.readonly. Flow: app POSTs any remaining fields to POST /auth/connections/oauth/start, then redirects to the provider authorization URL.",
+      "configure": {
+        "credentials": [],
+        "oauth": {
+          "providerDocsUrl": "https://developers.google.com/youtube/v3/guides/auth",
+          "defaultScopes": [
+            "openid",
+            "profile",
+            "email",
+            "https://www.googleapis.com/auth/youtube.readonly",
+            "https://www.googleapis.com/auth/youtube.force-ssl",
+            "https://www.googleapis.com/auth/yt-analytics.readonly"
+          ],
+          "authorizationParameters": [
+            "client_id",
+            "scope",
+            "response_type",
+            "state",
+            "redirect_uri",
+            "access_type",
+            "prompt"
+          ],
+          "tokenParameters": [
+            "client_id",
+            "client_secret",
+            "code",
+            "grant_type",
+            "redirect_uri"
+          ],
+          "refreshParameters": [
+            "client_id",
+            "client_secret",
+            "grant_type",
+            "refresh_token"
+          ],
+          "tokenMethod": "POST",
+          "environments": {
+            "production": {
+              "authorizationUrl": "https://accounts.google.com/o/oauth2/v2/auth",
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "apiBaseUrl": "https://www.googleapis.com",
+              "refreshUrl": "https://oauth2.googleapis.com/token"
+            },
+            "analytics": {
+              "apiBaseUrl": "https://youtubeanalytics.googleapis.com"
+            }
+          }
+        },
+        "api": {
+          "definitionGet": {
+            "method": "GET",
+            "path": "/auth/connections/definitions/:slug",
+            "note": "JWT required; optional verification against this manifest."
+          },
+          "oauthStart": {
+            "method": "POST",
+            "path": "/auth/connections/oauth/start",
+            "body": {
+              "slug": "Registry slug (e.g. metaads).",
+              "credentials": "Record<string, string> — values for manifest credential keys; may be empty when the API fills OAuth app id/secret from `.env.vendors`.",
+              "brandprofile_id": "Optional; ties the connection to the current brand profile.",
+              "success_redirect_url": "Absolute URL — API redirects here after OAuth success.",
+              "failure_redirect_url": "Absolute URL — API redirects here on OAuth error.",
+              "client_state": "Optional opaque string echoed to success redirect."
             }
           }
         },
