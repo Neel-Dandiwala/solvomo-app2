@@ -37,6 +37,18 @@ function sparklinePath(
   });
   return `M${pts.join(" L")}`;
 }
+
+function deltaToneClass(delta_pct: number, insight_kind: InsightKind): string {
+  if (delta_pct === 0) return "bg-slate-50 text-slate-500";
+  if (delta_pct > 0) {
+    return insight_kind === "risk"
+      ? "bg-red-50 text-red-700"
+      : "bg-emerald-50 text-emerald-700";
+  }
+  return insight_kind === "opportunity"
+    ? "bg-emerald-50 text-emerald-700"
+    : "bg-red-50 text-red-700";
+}
 </script>
 
 <template>
@@ -64,13 +76,7 @@ function sparklinePath(
         </div>
         <div
           class="flex items-center gap-1 rounded-xl px-3 py-1.5 text-[13px] font-semibold"
-          :class="{
-            'bg-emerald-50 text-emerald-700': data.delta_pct > 0 && insight_kind !== 'risk',
-            'bg-red-50 text-red-700': data.delta_pct > 0 && insight_kind === 'risk',
-            'bg-red-50 text-red-700': data.delta_pct < 0 && insight_kind !== 'opportunity',
-            'bg-emerald-50 text-emerald-700': data.delta_pct < 0 && insight_kind === 'opportunity',
-            'bg-slate-50 text-slate-500': data.delta_pct === 0,
-          }"
+          :class="deltaToneClass(data.delta_pct, insight_kind)"
         >
           <span>{{ data.delta_pct > 0 ? "↑" : data.delta_pct < 0 ? "↓" : "→" }}</span>
           <span>{{ Math.abs(data.delta_pct) }}%</span>

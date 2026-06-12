@@ -56,7 +56,6 @@ export function useApiClient() {
     const res = await fetch(url, {
       method: "DELETE",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
     });
     await readRouteResponse<unknown>(res);
   }

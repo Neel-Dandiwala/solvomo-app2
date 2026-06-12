@@ -136,6 +136,10 @@ async function connectApiKey(item: ConnectionsDirectoryItem) {
 
 function openConnectFlow(item: ConnectionsDirectoryItem) {
   const slug = item.slug.trim();
+  if (playground.isPlayground.value) {
+    void activatePlayground(item);
+    return;
+  }
   if (isApiKeyConnector(slug)) {
     actionError.value = null;
     apiKeyInput.value = "";

@@ -5,6 +5,7 @@ export function useInsightsTab() {
   const api = useApiClient();
   const auth = useAuth();
   const workspace = useWorkspaceContext();
+  const connections = useConnectionsData();
 
   const data = useState<InsightsResponse | null>("sv-insights-tab-data", () => null);
   const loading = useState("sv-insights-tab-loading", () => false);
@@ -17,6 +18,16 @@ export function useInsightsTab() {
     if (!ws || !bp) return null;
     return brandScopeQuery(ws, bp);
   }
+
+  const activeConnectionSignature = computed(() => {
+    const bp = workspace.currentBrandProfileId.value?.trim();
+    if (!bp) return "";
+    return connections.userConnections.value
+      .filter((connection) => connection.is_active && connection.brandprofile_id === bp)
+      .map((connection) => connection.id)
+      .sort()
+      .join(",");
+  });
 
   async function refresh(options?: { force?: boolean; force_regen?: boolean }) {
     if (!auth.isAuthenticated.value || !api.hasBase.value) {
@@ -57,6 +68,7 @@ export function useInsightsTab() {
         auth.isAuthenticated.value,
         workspace.currentWorkspaceId.value,
         workspace.currentBrandProfileId.value,
+        activeConnectionSignature.value,
       ] as const,
     () => {
       loaded.value = false;
