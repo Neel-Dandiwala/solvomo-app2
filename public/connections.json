@@ -1,6 +1,6 @@
 {
   "manifestVersion": 2,
-  "generated_at": "2026-06-11T01:43:05.310Z",
+  "generated_at": "2026-06-18T23:09:03.510Z",
   "source": "api/src/integrations/registry.ts",
   "integrations": [
     {
@@ -380,9 +380,12 @@
           "outbound_fields": {
             "id": "supported",
             "external_id": "supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "name": "supported",
             "currency": "supported",
-            "time_zone": "supported"
+            "time_zone": "supported",
+            "parent_id": "not-supported"
           },
           "methods": {
             "list": true,
@@ -401,19 +404,39 @@
             "budget_period": "supported",
             "start_at": "supported",
             "end_at": "supported",
-            "targeting": "supported"
+            "targeting": "supported",
+            "advertising_channel_type": "supported",
+            "campaign_budget_identifier": "supported",
+            "has_eu_political_ads": "supported"
           },
           "outbound_fields": {
             "id": "supported",
-            "external_id": "supported",
             "organization_id": "supported",
+            "account_id": "not-supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "name": "supported",
             "status": "supported",
-            "budget_amount": "supported",
-            "budget_period": "supported",
+            "insertion_order_id": "not-supported",
+            "parent_campaign_id": "not-supported",
             "start_at": "supported",
             "end_at": "supported",
-            "targeting": "supported"
+            "budget_amount": "supported",
+            "budget_period": "supported",
+            "total_spend_amount": "supported",
+            "targeting": "supported",
+            "goal": "not-supported",
+            "planned_spend_amount": "not-supported",
+            "frequency_cap": "not-supported",
+            "advertising_channel_type": "supported",
+            "campaign_budget_identifier": "not-supported",
+            "currency": "not-supported",
+            "category": "not-supported",
+            "has_eu_political_ads": "supported",
+            "objective": "not-supported",
+            "daily_budget_minor": "not-supported",
+            "lifetime_budget_minor": "not-supported"
           },
           "methods": {
             "list": true,
@@ -435,48 +458,85 @@
           },
           "outbound_fields": {
             "id": "supported",
-            "campaign_id": "supported",
             "organization_id": "supported",
+            "campaign_id": "supported",
+            "insertion_order_id": "not-supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "name": "supported",
+            "parent_id": "not-supported",
             "status": "supported",
             "targeting": "supported",
             "bid_amount": "supported",
-            "promoted": "supported"
+            "bid_strategy": "not-supported",
+            "budget_amount": "not-supported",
+            "budget_period": "not-supported",
+            "budget_allocation_type": "not-supported",
+            "start_at": "not-supported",
+            "end_at": "not-supported",
+            "budget_unit": "not-supported",
+            "budget_max_amount": "not-supported",
+            "type": "not-supported",
+            "has_eu_political_ads": "not-supported",
+            "pacing": "not-supported",
+            "frequency_cap": "not-supported",
+            "creative_ids": "not-supported",
+            "optimization_goal": "not-supported",
+            "billing_event": "not-supported",
+            "currency": "not-supported",
+            "promoted": "supported",
+            "bid_strategy_label": "not-supported"
           },
           "methods": {
             "list": true,
             "get": true,
             "create": true,
             "update": true,
-            "remove": false
+            "remove": true
           }
         },
         "ads_ad": {
           "inbound_fields": {
             "organization_id": "supported",
-            "group_id": "supported-required",
+            "ad_group_id": "supported-required",
             "name": "supported-required",
             "status": "supported",
             "headline": "supported",
             "description": "supported",
-            "final_url": "supported"
+            "final_url": "supported",
+            "path_1": "supported",
+            "path_2": "supported"
           },
           "outbound_fields": {
             "id": "supported",
-            "campaign_id": "supported",
-            "group_id": "supported",
             "organization_id": "supported",
+            "campaign_id": "supported",
+            "ad_group_id": "supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "name": "supported",
             "status": "supported",
+            "ad_type": "supported",
+            "creative_ids": "not-supported",
+            "creative_asset_url": "supported",
+            "ad_copy": "supported",
             "headline": "supported",
             "description": "supported",
-            "final_url": "supported"
+            "cta": "supported",
+            "final_url": "supported",
+            "display_url": "supported",
+            "path_1": "supported",
+            "path_2": "supported",
+            "promoted": "not-supported",
+            "creative_id": "not-supported"
           },
           "methods": {
             "list": true,
-            "get": false,
-            "create": false,
-            "update": false,
+            "get": true,
+            "create": true,
+            "update": true,
             "remove": true
           }
         },
@@ -485,30 +545,66 @@
             "organization_id": "supported",
             "group_id": "supported-required",
             "name": "supported-required",
+            "status": "supported",
+            "body": "supported",
+            "title": "supported",
             "asset_urls": "supported",
             "link_url": "supported"
           },
           "outbound_fields": {
             "id": "supported",
+            "organization_id": "supported",
+            "account_id": "not-supported",
+            "campaign_id": "supported",
+            "group_id": "supported",
+            "item_id": "not-supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "name": "supported",
             "status": "supported",
+            "creative_type": "supported",
+            "hosting_source": "supported",
+            "width": "not-supported",
+            "height": "not-supported",
             "asset_urls": "supported",
-            "link_url": "supported"
+            "link_url": "supported",
+            "body": "not-supported",
+            "title": "not-supported",
+            "cta": "not-supported",
+            "third_party_tag": "not-supported",
+            "vast_tag_url": "not-supported",
+            "external_creative_reference": "not-supported",
+            "external_placement_reference": "not-supported",
+            "external_ad_reference": "not-supported",
+            "promoted": "not-supported",
+            "format": "not-supported",
+            "thumbnail_url": "not-supported",
+            "headline": "not-supported",
+            "call_to_action": "not-supported"
           },
           "methods": {
             "list": true,
-            "get": false,
-            "create": false,
-            "update": false,
+            "get": true,
+            "create": true,
+            "update": true,
             "remove": true
           }
         },
         "ads_target": {
           "outbound_fields": {
             "id": "supported",
+            "organization_id": "not-supported",
+            "group_id": "not-supported",
+            "campaign_id": "not-supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "name": "supported",
+            "value": "not-supported",
             "target_type": "supported",
-            "value": "supported"
+            "spec": "not-supported",
+            "label": "not-supported"
           },
           "methods": {
             "list": true,
@@ -522,11 +618,16 @@
           "outbound_fields": {
             "id": "supported",
             "organization_id": "supported",
+            "external_id": "supported",
+            "created_at": "supported",
+            "updated_at": "not-supported",
             "currency": "supported",
             "metrics": "supported",
+            "campaign": "supported",
+            "group": "supported",
+            "ad": "supported",
             "start_at": "supported",
-            "end_at": "supported",
-            "created_at": "supported"
+            "end_at": "supported"
           },
           "methods": {
             "list": true,
@@ -539,8 +640,13 @@
         "ads_promoted": {
           "outbound_fields": {
             "id": "supported",
+            "organization_id": "not-supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "name": "supported",
-            "promoted_type": "supported"
+            "promoted_type": "supported",
+            "parent_id": "not-supported"
           },
           "methods": {
             "list": true,
@@ -553,6 +659,9 @@
         "metric_report": {
           "outbound_fields": {
             "id": "supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "start_at": "supported",
             "end_at": "supported",
             "type": "supported",
@@ -563,7 +672,9 @@
             "account_id": "supported",
             "campaign_id": "supported",
             "group_id": "supported",
-            "ad_id": "supported"
+            "ad_id": "supported",
+            "target_id": "not-supported",
+            "sub_items": "not-supported"
           },
           "methods": {
             "list": true,
@@ -651,9 +762,13 @@
         "ads_organization": {
           "outbound_fields": {
             "id": "supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "supported",
             "name": "supported",
             "currency": "supported",
-            "time_zone": "supported"
+            "time_zone": "supported",
+            "parent_id": "supported"
           },
           "methods": {
             "list": true,
@@ -666,58 +781,141 @@
         "ads_campaign": {
           "outbound_fields": {
             "id": "supported",
+            "organization_id": "supported",
+            "account_id": "not-supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "supported",
             "name": "supported",
             "status": "supported",
-            "organization_id": "supported"
-          },
-          "methods": {
-            "list": true,
-            "get": false,
-            "create": false,
-            "update": false,
-            "remove": false
-          }
-        },
-        "ads_insertionorder": {
-          "outbound_fields": {
-            "id": "supported",
-            "name": "supported",
-            "campaign_id": "supported",
-            "organization_id": "supported"
-          },
-          "methods": {
-            "list": true,
-            "get": false,
-            "create": false,
-            "update": false,
-            "remove": false
-          }
-        },
-        "ads_group": {
-          "outbound_fields": {
-            "id": "supported",
-            "name": "supported",
-            "campaign_id": "supported",
-            "organization_id": "supported"
+            "insertion_order_id": "not-supported",
+            "parent_campaign_id": "not-supported",
+            "start_at": "not-supported",
+            "end_at": "not-supported",
+            "budget_amount": "not-supported",
+            "budget_period": "not-supported",
+            "total_spend_amount": "not-supported",
+            "targeting": "not-supported",
+            "goal": "supported",
+            "planned_spend_amount": "supported",
+            "frequency_cap": "supported",
+            "advertising_channel_type": "not-supported",
+            "campaign_budget_identifier": "not-supported",
+            "currency": "not-supported",
+            "category": "not-supported",
+            "has_eu_political_ads": "not-supported",
+            "objective": "not-supported",
+            "daily_budget_minor": "not-supported",
+            "lifetime_budget_minor": "not-supported"
           },
           "methods": {
             "list": true,
             "get": true,
             "create": true,
             "update": true,
-            "remove": false
+            "remove": true
+          }
+        },
+        "ads_insertionorder": {
+          "outbound_fields": {
+            "id": "supported",
+            "organization_id": "supported",
+            "account_id": "not-supported",
+            "campaign_id": "supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "status": "supported",
+            "pacing": "supported",
+            "frequency_cap": "supported",
+            "kpi": "supported",
+            "budget_unit": "supported",
+            "budget_segments": "supported",
+            "bid_strategy": "supported",
+            "reference": "not-supported",
+            "start_at": "not-supported",
+            "end_at": "not-supported",
+            "budget_amount_minor": "not-supported",
+            "budget_currency": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
+          }
+        },
+        "ads_group": {
+          "outbound_fields": {
+            "id": "supported",
+            "organization_id": "supported",
+            "campaign_id": "supported",
+            "insertion_order_id": "supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "parent_id": "supported",
+            "status": "supported",
+            "targeting": "supported",
+            "bid_amount": "not-supported",
+            "bid_strategy": "supported",
+            "budget_amount": "not-supported",
+            "budget_period": "not-supported",
+            "budget_allocation_type": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "budget_unit": "supported",
+            "budget_max_amount": "supported",
+            "type": "supported",
+            "has_eu_political_ads": "supported",
+            "pacing": "supported",
+            "frequency_cap": "supported",
+            "creative_ids": "supported",
+            "optimization_goal": "not-supported",
+            "billing_event": "not-supported",
+            "currency": "not-supported",
+            "promoted": "not-supported",
+            "bid_strategy_label": "not-supported"
+          },
+          "methods": {
+            "list": true,
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
           }
         },
         "ads_ad": {
           "outbound_fields": {
             "id": "supported",
+            "organization_id": "supported",
+            "campaign_id": "not-supported",
+            "ad_group_id": "supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "name": "supported",
-            "group_id": "supported",
-            "campaign_id": "supported"
+            "status": "supported",
+            "ad_type": "not-supported",
+            "creative_ids": "not-supported",
+            "creative_asset_url": "not-supported",
+            "ad_copy": "not-supported",
+            "headline": "not-supported",
+            "description": "not-supported",
+            "cta": "not-supported",
+            "final_url": "not-supported",
+            "display_url": "not-supported",
+            "path_1": "not-supported",
+            "path_2": "not-supported",
+            "promoted": "not-supported",
+            "creative_id": "not-supported"
           },
           "methods": {
             "list": true,
-            "get": false,
+            "get": true,
             "create": false,
             "update": false,
             "remove": false
@@ -726,23 +924,58 @@
         "ads_creative": {
           "outbound_fields": {
             "id": "supported",
-            "name": "supported",
             "organization_id": "supported",
-            "asset_urls": "supported"
+            "account_id": "not-supported",
+            "campaign_id": "not-supported",
+            "group_id": "not-supported",
+            "item_id": "not-supported",
+            "external_id": "not-supported",
+            "created_at": "supported",
+            "updated_at": "supported",
+            "name": "supported",
+            "status": "supported",
+            "creative_type": "supported",
+            "hosting_source": "supported",
+            "width": "supported",
+            "height": "supported",
+            "asset_urls": "not-supported",
+            "link_url": "not-supported",
+            "body": "not-supported",
+            "title": "not-supported",
+            "cta": "not-supported",
+            "third_party_tag": "supported",
+            "vast_tag_url": "supported",
+            "external_creative_reference": "supported",
+            "external_placement_reference": "supported",
+            "external_ad_reference": "supported",
+            "promoted": "not-supported",
+            "format": "not-supported",
+            "thumbnail_url": "not-supported",
+            "headline": "not-supported",
+            "call_to_action": "not-supported"
           },
           "methods": {
             "list": true,
-            "get": false,
-            "create": false,
-            "update": false,
-            "remove": false
+            "get": true,
+            "create": true,
+            "update": true,
+            "remove": true
           }
         },
         "ads_target": {
           "outbound_fields": {
             "id": "supported",
+            "organization_id": "not-supported",
+            "group_id": "not-supported",
+            "campaign_id": "not-supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "name": "supported",
-            "target_type": "supported"
+            "value": "not-supported",
+            "target_type": "supported",
+            "spec": "not-supported",
+            "label": "not-supported"
           },
           "methods": {
             "list": true,
@@ -756,7 +989,14 @@
           "outbound_fields": {
             "id": "supported",
             "organization_id": "supported",
+            "external_id": "not-supported",
+            "created_at": "supported",
+            "updated_at": "not-supported",
+            "currency": "not-supported",
             "metrics": "supported",
+            "campaign": "supported",
+            "group": "supported",
+            "ad": "supported",
             "start_at": "supported",
             "end_at": "supported"
           },
@@ -860,7 +1100,10 @@
             "id": "supported",
             "name": "supported",
             "organization_id": "supported",
-            "status": "supported"
+            "status": "supported",
+            "start_at": "supported",
+            "end_at": "supported",
+            "updated_at": "supported"
           },
           "methods": {
             "list": true,
@@ -871,12 +1114,6 @@
           }
         },
         "ads_group": {
-          "outbound_fields": {
-            "id": "supported",
-            "name": "supported",
-            "campaign_id": "supported",
-            "organization_id": "supported"
-          },
           "methods": {
             "list": true,
             "get": true,
@@ -889,8 +1126,9 @@
           "outbound_fields": {
             "id": "supported",
             "name": "supported",
-            "group_id": "supported",
-            "campaign_id": "supported"
+            "campaign_id": "supported",
+            "organization_id": "supported",
+            "status": "supported"
           },
           "methods": {
             "list": true,
@@ -901,11 +1139,6 @@
           }
         },
         "ads_creative": {
-          "outbound_fields": {
-            "id": "supported",
-            "name": "supported",
-            "asset_urls": "supported"
-          },
           "methods": {
             "list": true,
             "get": true,
@@ -918,9 +1151,13 @@
           "outbound_fields": {
             "id": "supported",
             "organization_id": "supported",
-            "metrics": "supported",
+            "created_at": "supported",
             "start_at": "supported",
-            "end_at": "supported"
+            "end_at": "supported",
+            "metrics": "supported",
+            "campaign": "supported",
+            "group": "supported",
+            "ad": "supported"
           },
           "methods": {
             "list": true,
@@ -1008,11 +1245,16 @@
           "outbound_fields": {
             "id": "supported",
             "organization_id": "supported",
+            "external_id": "not-supported",
             "currency": "supported",
             "metrics": "supported",
+            "campaign": "supported",
+            "group": "supported",
+            "ad": "supported",
             "start_at": "supported",
             "end_at": "supported",
-            "created_at": "supported"
+            "created_at": "supported",
+            "updated_at": "not-supported"
           },
           "methods": {
             "list": true,
@@ -1261,13 +1503,21 @@
           "outbound_fields": {
             "id": "supported",
             "external_id": "supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "start_at": "supported",
             "end_at": "supported",
             "type": "supported",
             "unit": "supported",
             "metric": "supported",
             "value": "supported",
-            "ad_id": "supported"
+            "currency": "not-supported",
+            "account_id": "not-supported",
+            "campaign_id": "not-supported",
+            "group_id": "not-supported",
+            "ad_id": "supported",
+            "target_id": "not-supported",
+            "sub_items": "not-supported"
           },
           "methods": {
             "list": true,
@@ -1417,6 +1667,8 @@
             "external_id": "supported",
             "campaign_id": "supported",
             "organization_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
             "name": "supported",
             "status": "supported",
             "bid_amount": "supported",
@@ -1433,7 +1685,7 @@
         "ads_ad": {
           "inbound_fields": {
             "organization_id": "supported-required",
-            "group_id": "supported-required",
+            "ad_group_id": "supported-required",
             "name": "supported-required",
             "status": "supported",
             "headline": "supported",
@@ -1444,9 +1696,11 @@
           "outbound_fields": {
             "id": "supported",
             "external_id": "supported",
-            "group_id": "supported",
+            "ad_group_id": "supported",
             "campaign_id": "supported",
             "organization_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
             "name": "supported",
             "status": "supported",
             "headline": "supported",
@@ -1468,14 +1722,24 @@
             "group_id": "supported-required",
             "name": "supported-required",
             "status": "supported",
-            "campaign_id": "supported"
+            "campaign_id": "supported",
+            "headline": "supported",
+            "body": "supported",
+            "link_url": "supported"
           },
           "outbound_fields": {
             "id": "supported",
             "external_id": "supported",
             "organization_id": "supported",
+            "campaign_id": "supported",
+            "group_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
             "name": "supported",
-            "status": "supported"
+            "status": "supported",
+            "headline": "supported",
+            "body": "supported",
+            "link_url": "supported"
           },
           "methods": {
             "list": true,
@@ -1505,8 +1769,17 @@
         "ads_target": {
           "outbound_fields": {
             "id": "supported",
+            "organization_id": "not-supported",
+            "group_id": "not-supported",
+            "campaign_id": "not-supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "name": "supported",
-            "target_type": "supported"
+            "value": "supported",
+            "target_type": "supported",
+            "spec": "not-supported",
+            "label": "not-supported"
           },
           "methods": {
             "list": true,
@@ -1616,6 +1889,7 @@
         "ads_organization": {
           "outbound_fields": {
             "id": "supported",
+            "external_id": "supported",
             "name": "supported",
             "currency": "supported",
             "created_at": "supported",
@@ -1641,6 +1915,7 @@
           },
           "outbound_fields": {
             "id": "supported",
+            "external_id": "supported",
             "organization_id": "supported",
             "name": "supported",
             "status": "supported",
@@ -1670,12 +1945,17 @@
           },
           "outbound_fields": {
             "id": "supported",
+            "external_id": "supported",
             "campaign_id": "supported",
             "organization_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
             "name": "supported",
             "status": "supported",
             "bid_amount": "supported",
-            "targeting": "supported"
+            "targeting": "supported",
+            "start_at": "not-supported",
+            "end_at": "not-supported"
           },
           "methods": {
             "list": true,
@@ -1688,10 +1968,15 @@
         "ads_ad": {
           "outbound_fields": {
             "id": "supported",
-            "group_id": "supported",
+            "external_id": "supported",
+            "ad_group_id": "supported",
             "organization_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
             "name": "supported",
-            "status": "supported"
+            "status": "supported",
+            "ad_type": "supported",
+            "final_url": "supported"
           },
           "methods": {
             "list": true,
@@ -1702,11 +1987,29 @@
           }
         },
         "ads_creative": {
+          "inbound_fields": {
+            "organization_id": "supported-required",
+            "group_id": "supported-required",
+            "name": "supported-required",
+            "status": "supported",
+            "campaign_id": "supported",
+            "headline": "supported",
+            "body": "supported",
+            "link_url": "supported"
+          },
           "outbound_fields": {
             "id": "supported",
+            "external_id": "supported",
             "organization_id": "supported",
+            "campaign_id": "supported",
+            "group_id": "supported",
+            "created_at": "supported",
+            "updated_at": "supported",
             "name": "supported",
-            "status": "supported"
+            "status": "supported",
+            "headline": "supported",
+            "body": "supported",
+            "link_url": "supported"
           },
           "methods": {
             "list": true,
@@ -1719,6 +2022,7 @@
         "ads_report": {
           "outbound_fields": {
             "id": "supported",
+            "currency": "supported",
             "metrics": "supported",
             "start_at": "supported",
             "end_at": "supported",
@@ -1736,7 +2040,16 @@
           "outbound_fields": {
             "id": "supported",
             "name": "supported",
-            "target_type": "supported"
+            "target_type": "supported",
+            "value": "supported",
+            "organization_id": "not-supported",
+            "group_id": "not-supported",
+            "campaign_id": "not-supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
+            "spec": "not-supported",
+            "label": "not-supported"
           },
           "methods": {
             "list": true,
@@ -1831,8 +2144,10 @@
         "ads_organization": {
           "outbound_fields": {
             "id": "supported",
+            "external_id": "supported",
             "name": "supported",
-            "currency": "supported"
+            "currency": "supported",
+            "parent_id": "supported"
           },
           "methods": {
             "list": true,
@@ -1847,6 +2162,7 @@
             "organization_id": "supported",
             "name": "supported",
             "status": "supported",
+            "currency": "supported",
             "budget_amount": "supported",
             "start_at": "supported",
             "end_at": "supported"
@@ -1854,10 +2170,13 @@
           "outbound_fields": {
             "id": "supported",
             "organization_id": "supported",
+            "external_id": "supported",
             "name": "supported",
             "status": "supported",
             "start_at": "supported",
-            "end_at": "supported"
+            "end_at": "supported",
+            "created_at": "supported",
+            "updated_at": "supported"
           },
           "methods": {
             "list": true,
@@ -1870,8 +2189,13 @@
         "ads_promoted": {
           "outbound_fields": {
             "id": "supported",
+            "organization_id": "not-supported",
+            "external_id": "not-supported",
+            "created_at": "not-supported",
+            "updated_at": "not-supported",
             "name": "supported",
-            "promoted_type": "supported"
+            "promoted_type": "supported",
+            "parent_id": "not-supported"
           },
           "methods": {
             "list": true,
